@@ -1,9 +1,5 @@
 #!/bin/bash
 
-for i in lib/**/*.jar; do 
-	cp=${cp}:${i}
-done
-
-export CLASSPATH=${cp}
+./setup_classpath.sh
 
 java -Xmx200m org.sc.probro.BrokerStart
