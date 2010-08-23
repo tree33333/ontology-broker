@@ -1,5 +1,4 @@
 #!/bin/bash
 
 eval `./setup_classpath.sh`
-
-java -Xmx200m org.sc.probro.BrokerStart
+${JAVA_HOME}/bin/java -Xmx200m org.sc.probro.BrokerStart

@@ -1,6 +1,7 @@
 #!/bin/bash
 
-for i in `ls lib/**/*.jar lib/*.jar`; do
+cp=
+for i in `find . -iname "*.jar"` ; do
         cp=${cp}:${i}
 done
-echo "export CLASSPATH=${cp}" | sed -e 's/=:/=/'
+echo "export CLASSPATH=/home/tdanford/broker/src:${cp}"  | sed -e 's/::/:/'
