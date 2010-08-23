@@ -10,6 +10,15 @@
 
 <script type="text/javascript">
 $(document).ready(function() { 
+	$('#doquery').click(function(evt) { 
+		Broker.debug('querying...');
+		var searchTerm = $(this).parent().parent().find('input[name="search"]').attr('value');
+		$.get('/query?search=' + searchTerm + '&format=html',
+			function(htmlresult) { 
+				$('#results').html(htmlresult);	
+			}, 'html');
+		return false;
+	});
 });
 </script> 
 
@@ -38,10 +47,12 @@ body {
 		<!-- <tr><td style="width: 20%;">Context</td><td style="width: 80%;"> <textarea style="width: 100%;" name="context" rows="5" ></textarea> </td></tr> -->
 	</table>
 	<input type="hidden" name="format" value="html" /> 
-	<input type="submit"></input>
+	<input id="doquery" type="submit"></input>
 	</fieldset>
 </form>
 
+<div id="results">
+</div>
 
 </div>
 
