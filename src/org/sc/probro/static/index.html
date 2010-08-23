@@ -1,0 +1,94 @@
+<html>
+
+<head>
+<title>PRO Broker</title>
+
+<script src="/jquery-1.4.2.js" type = "text/javascript"></script>
+<script src="/json2.js" type = "text/javascript"></script>
+<script src="/jquery-ui/js/jquery-ui-1.8.4.custom.min.js" type = "text/javascript"></script>
+<script src="/broker.js" type = "text/javascript"></script>
+
+<script type="text/javascript">
+$(document).ready(function() { 
+		
+	var fill_requests = function(data) { 
+				$('#datatable').html(data); 
+				$('tr.obj_request td.value_request_id').each(function(idx) { 
+					var request_uri = '/request/' + $(this).text() + '/' 
+					var format='?format=html';
+					$(this).html($('<a href="' + request_uri + format + '">' + request_uri + '</a>'));
+				});
+				$('td.value_user_id').each(function(idx) { 
+					var user_id = $(this).text()
+					var user_uri = '/user/' + user_id + '/?format=html';
+					$(this).html('<a href="' + user_uri + '">' + user_id + '</a>');
+				});
+				$('td.value_ontology_id').each(function(idx) { 
+					var ont_id = $(this).text()
+					var ont_uri = '/ontology/' + ont_id + '/?format=html';
+					$(this).html('<a href="' + ont_uri + '">' + ont_id + '</a>');
+				});
+				$('tr.obj_request').each(function(idx) { 
+					if(idx % 2 === 0) { 
+						$(this).addClass('evenrow');
+					}
+				});
+			};
+
+	var update = function() { Broker.list_requests(fill_requests); };
+
+	update();
+});
+</script> 
+
+<style>
+#mainbody { 
+	margin-left: auto; 
+	margin-right: auto;
+	width: 90%;
+}
+div#datatable { 
+	padding-top: 10px;
+	padding-bottom: 10px;
+	border-width: 1px;
+	border-style: solid;
+	border-radius: 10px;
+}
+
+#datatable table { 
+	width: 100%;
+	border-spacing: 0px;
+}
+tr.evenrow { 
+	background-color: #eeeeee;
+}
+body { 
+	background-color: #ffffff;
+}
+</style>
+
+</head>
+
+<body>
+
+<div id="mainbody">
+<h3>PRO Broker</h3>
+
+<div id="datatable"></div>
+
+<div id="links">
+	<a href="/query.html">Term Query</a><br/>
+	<a href="/requestform.html">New Term Request</a><br/>
+	<a href="/bulk-requests">Bulk Request List</a><br/>
+</div>
+
+</div>
+
+<div id="debug">
+<!-- <h4>Debug</h4> -->
+</div> 
+
+
+</body>
+
+</html>

@@ -1,0 +1,10 @@
+
+"Tracking ID",	
+"DB source",	
+"name",	
+"UniProtKB Ac",	
+"protein coordinates (beginning-end)",	
+"residue#, Modification",	
+"taxon ID",	
+"Organism",		
+ 

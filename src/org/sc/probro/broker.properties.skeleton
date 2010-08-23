@@ -1,0 +1,12 @@
+
+## relative path to the directory with the static resources.
+resourceBase=FILLMEIN
+
+## port at which the server will run.
+port=8080
+
+## relative path to Derby DB file.
+dbPath=FILLMEIN
+
+## Path to the Lucene Index file
+luceneIndex=FILLMEIN
