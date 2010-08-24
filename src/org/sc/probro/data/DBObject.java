@@ -201,8 +201,7 @@ public abstract class DBObject {
 		return html.toString();
 	}
 	
-	public void writeJSONObject(JSONWriter json) throws JSONException { 
-		json.object();
+	protected void writeJSONObjectContents(JSONWriter json) throws JSONException { 
 		for(Field f : getClass().getFields()) { 
 			int mod = f.getModifiers();
 			if(Modifier.isPublic(mod) && !Modifier.isStatic(mod)) { 
@@ -218,7 +217,12 @@ public abstract class DBObject {
 					throw new JSONException(e);
 				}
 			}
-		}
+		}		
+	}
+	
+	public void writeJSONObject(JSONWriter json) throws JSONException { 
+		json.object();
+		writeJSONObjectContents(json);
 		json.endObject();
 	}
 	

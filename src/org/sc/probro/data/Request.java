@@ -5,6 +5,10 @@ import java.lang.reflect.*;
 import java.util.*;
 import java.sql.*;
 
+import org.json.JSONException;
+import org.json.JSONWriter;
+import org.sc.probro.BrokerStart;
+
 public class Request extends DBObject {
 	
 	public static final Integer RESPONSE_REDUNDANT 		= 0;
@@ -30,7 +34,17 @@ public class Request extends DBObject {
 	
 	public Request(ResultSet rs) throws SQLException { super(rs); }
 	
-	public String getProvisionalTerm() { return String.format("request/%d/", request_id); }
+	public String getProvisionalTerm() { 
+		return String.format("http://%s:%d/request/%d/", 
+				BrokerStart.HOSTNAME,
+				BrokerStart.PORT,
+				request_id); 
+	}
+	
+	protected void writeJSONObjectContents(JSONWriter json) throws JSONException {
+		super.writeJSONObjectContents(json);
+		json.key("provisional_id").value(getProvisionalTerm());
+	}
 	
 	public int hashCode() { return request_id.hashCode(); }
 	
