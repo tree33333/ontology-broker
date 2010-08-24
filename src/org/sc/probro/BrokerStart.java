@@ -1,5 +1,6 @@
 package org.sc.probro;
 
+import java.net.UnknownHostException;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -17,10 +18,23 @@ import org.sc.probro.data.*;
 import org.sc.probro.servlets.*;
 
 public class BrokerStart {
+	
+	public static String HOSTNAME = "localhost";
+	public static int PORT = 8080;
+	
+	static { 
+		try {
+			HOSTNAME = java.net.Inet4Address.getLocalHost().getHostName();
+		} catch (UnknownHostException e) {
+			System.err.println(String.format("Unable to find HOSTNAME: %s", e.getMessage()));
+		}
+	}
 
 	public static void main(String[] args) throws Exception {
 		BrokerProperties props = new BrokerProperties();
 		int port = args.length > 0 ? Integer.parseInt(args[0]) : props.getPort();
+		PORT = port;
+		
 		String resourceBase = props.getResourceBase();
 		
 		BrokerStart js = new BrokerStart(port, resourceBase);
