@@ -122,8 +122,7 @@ public class BulkRequestServlet extends SkeletonDBServlet {
 				}
 				
 				printRow(writer, 
-						String.format("/%s", 
-								req.getProvisionalTerm()),
+						req.getProvisionalTerm(),
 						"?", 
 						req.search_text, 
 						metaMap.containsKey("uniprot") ? metaMap.get("uniprot") : "",
