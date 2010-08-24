@@ -165,6 +165,55 @@ public abstract class DBObject {
 		return html.toString();
 	}
 	
+	public <T extends DBObject> T loadDBVersion(Class<T> cls, Statement stmt) throws SQLException { 
+		if(!isSubclass(cls, getClass())) { 
+			throw new IllegalArgumentException(String.format(
+				"%s is not a subclass of %s", cls.getSimpleName(), getClass().getSimpleName()));
+		}
+		
+		if(getKey() == null) { throw new IllegalArgumentException("Can't load matching object without a key."); }
+		
+		T db = null;
+		try {
+			Field keyField = getClass().getField(getKey());
+			int keyMod = keyField.getModifiers();
+			if(!Modifier.isPublic(keyMod) || Modifier.isStatic(keyMod)) { 
+				throw new IllegalArgumentException(String.format("Key field %s must be public and non-static", 
+						getKey()));
+			}
+			Object keyValue = keyField.get(this);
+			
+			String tableName = getClass().getSimpleName().toUpperCase() + "S";
+			Constructor<T> constructor = cls.getConstructor(ResultSet.class);
+			String query = String.format("select * from %s where %s=%s",
+					tableName, 
+					getKey(), 
+					DBObject.asSQL(keyValue));
+
+			ResultSet rs = stmt.executeQuery(query);
+			try { 
+				if(rs.next()) { 
+					db = constructor.newInstance(rs);
+				}
+			} finally { 
+				rs.close();
+			}
+			
+		} catch (InstantiationException e) {
+			e.printStackTrace(System.err);
+		} catch (InvocationTargetException e) {
+			e.printStackTrace(System.err);
+		} catch (NoSuchMethodException e) {
+			e.printStackTrace(System.err);
+		} catch (NoSuchFieldException e) {
+			e.printStackTrace(System.err);
+		} catch (IllegalAccessException e) {
+			e.printStackTrace(System.err);
+		}
+		
+		return db;
+	}
+	
 	public String writeHTMLObject(boolean asRow) {
 		StringBuilder html = new StringBuilder();
 		if(asRow) { 
