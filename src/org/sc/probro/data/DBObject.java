@@ -221,6 +221,41 @@ public abstract class DBObject {
 	}
 	
 	/**
+	 * Basically, isSubsetOf(x) is *almost* equivalent to !findMatchingFields(x).isEmpty(), 
+	 * except that it's directional -- it takes 'nulls' as missing values, and so it won't signal 
+	 * false for a null field in this object that has a value in the other.  
+	 * 
+	 * @param <T>
+	 * @param other
+	 * @return
+	 */
+	public <T extends DBObject> boolean isSubsetOf(T other) { 
+		if(!isSubclass(other.getClass(), getClass())) { 
+			throw new IllegalArgumentException(String.format("%s is not a subclass of %s",
+					other.getClass().getSimpleName(),
+					getClass().getSimpleName()));
+		}
+
+		for(Field f : getClass().getFields()) {
+			int mod = f.getModifiers();
+			if(Modifier.isPublic(mod) && !Modifier.isStatic(mod)) { 
+				try {
+					Object thisValue = f.get(this), thatValue = f.get(other);
+					if(thisValue != null) {
+						if(thatValue == null || !thisValue.equals(thatValue)) { 
+							return false;
+						}
+					}
+				} catch (IllegalAccessException e) {
+					e.printStackTrace(System.err);
+				}
+			}
+		}
+		
+		return true;
+	}
+	
+	/**
 	 * Returns the set of field names for which the values whose values differ between this object
 	 * and the object given as an argument.  The argument object must be a subclass of the class of 
 	 * 'this'.  Two values are said to 'differ' if one is 'null' when the other isn't, or if both
