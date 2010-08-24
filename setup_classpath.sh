@@ -1,7 +1,8 @@
 #!/bin/bash
 
+dir=`pwd`;
 cp=
-for i in `find . -iname "*.jar"` ; do
+for i in `find . -iname "${dir}/lib/*.jar"` ; do
         cp=${cp}:${i}
 done
-echo "export CLASSPATH=/home/tdanford/broker/src:${cp}"  | sed -e 's/::/:/'
+echo "export CLASSPATH=${dir}/src${cp}" 
