@@ -220,12 +220,60 @@ public abstract class DBObject {
 		}		
 	}
 	
+	/**
+	 * Returns the set of field names for which the values whose values differ between this object
+	 * and the object given as an argument.  The argument object must be a subclass of the class of 
+	 * 'this'.  Two values are said to 'differ' if one is 'null' when the other isn't, or if both
+	 * values are non-null but equals() (when called on one value, given the other value as an argument) 
+	 * returns false.
+	 * 
+	 * @param <T>
+	 * @param other  The other object to compare to. 
+	 * @throws IllegalArgumentException if the argument object is not a subclass of the class of 'this'.
+	 * @return
+	 */
+	public <T extends DBObject> Set<String> findMismatchingFields(T other) {
+		if(!isSubclass(other.getClass(), getClass())) { 
+			throw new IllegalArgumentException(String.format("%s is not a subclass of %s",
+					other.getClass().getSimpleName(),
+					getClass().getSimpleName()));
+		}
+
+		Set<String> mismatches = new TreeSet<String>();
+
+		for(Field f : getClass().getFields()) {
+			int mod = f.getModifiers();
+			if(Modifier.isPublic(mod) && !Modifier.isStatic(mod)) { 
+				try {
+					Object thisValue = f.get(this), thatValue = f.get(other);
+					if(thisValue != null || thatValue != null) { 
+						if(thisValue == null || thatValue == null || !thisValue.equals(thatValue)) { 
+							mismatches.add(f.getName());
+						}
+					}
+				} catch (IllegalAccessException e) {
+					e.printStackTrace(System.err);
+				}
+			}
+		}
+		
+		return mismatches;
+	}
+	
 	public void writeJSONObject(JSONWriter json) throws JSONException { 
 		json.object();
 		writeJSONObjectContents(json);
 		json.endObject();
 	}
 	
+	/**
+	 * Creates an SQL string, representing the SQL update statement that must be made to 
+	 * <em>update</em> this object in a database; this update statement can be executed assuming
+	 * the object itself is already present as a row in the appropriate table (otherwise, the
+	 * insertString() method should be used instead). 
+	 * 
+	 * @return
+	 */
 	public String saveString() { 
 		StringBuilder sb = new StringBuilder();
 		String tableName = getClass().getSimpleName().toUpperCase() + "S";
