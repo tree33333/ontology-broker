@@ -18,12 +18,20 @@ import javax.servlet.http.HttpServletResponse;
 import javax.sql.DataSource;
 
 import org.apache.derby.jdbc.EmbeddedDataSource;
+import org.eclipse.jetty.util.log.Log;
 import org.json.JSONException;
 import org.json.JSONWriter;
 import org.sc.probro.BrokerProperties;
 import org.sc.probro.data.DBObject;
 import org.sc.probro.data.Request;
 
+/**
+ * Converted to using the Jetty Logging system.
+ * 
+ * @author tdanford
+ *
+ * @param <T>
+ */
 public class DBObjectListServlet<T extends DBObject> extends SkeletonDBServlet {
 	
 	private Class<T> objectClass;
@@ -48,15 +56,15 @@ public class DBObjectListServlet<T extends DBObject> extends SkeletonDBServlet {
 			}
 			
 		} catch (NoSuchMethodException e) {
-			e.printStackTrace(System.err);
+			Log.warn(e);
 		} catch (InstantiationException e) {
-			e.printStackTrace(System.err);
+			Log.warn(e);
 		} catch (IllegalAccessException e) {
-			e.printStackTrace(System.err);
+			Log.warn(e);
 		} catch (InvocationTargetException e) {
-			e.printStackTrace(System.err);
+			Log.warn(e);
 		} catch (NoSuchFieldException e) {
-			e.printStackTrace(System.err);
+			Log.warn(e);
 		}
     }
 
@@ -67,7 +75,6 @@ public class DBObjectListServlet<T extends DBObject> extends SkeletonDBServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         StringWriter stringer = new StringWriter();
         JSONWriter json = new JSONWriter(stringer);
-        System.out.println("doPost()");
         
         try {
 			Map paramMap = request.getParameterMap();
@@ -75,6 +82,7 @@ public class DBObjectListServlet<T extends DBObject> extends SkeletonDBServlet {
 			DBObject obj = blankConstructor.newInstance();
 			
 			json.object();
+			StringBuilder info = new StringBuilder();
 			
 			for(Object nameobj : paramMap.keySet()) {
 				String name = nameobj.toString();
@@ -84,49 +92,60 @@ public class DBObjectListServlet<T extends DBObject> extends SkeletonDBServlet {
 					valueObj.getClass().isArray() ? 
 					Array.get(valueObj, 0).toString() : valueObj.toString();
 
-				System.out.println(String.format("\t%s: %s", name, String.valueOf(value)));
+				info.append(String.format("%s=%s ", name, String.valueOf(value)));
 
 				json.key(name).value(value);
 				obj.setFromString(name, value);
 			}
+			Log.debug(info.toString());
 
 	        json.endObject();
 	        
 	        Connection cxn = dbSource.getConnection();
 	        Statement stmt = cxn.createStatement();
 	        String insertString = obj.insertString();
-	        System.out.println(insertString);
+	        
+	        //System.out.println(insertString);
+	        Log.debug(insertString);
+	        
 	        stmt.executeUpdate(insertString);
 	        stmt.close();
 	        cxn.close();
 
-	        System.out.println(stringer.toString());
+	        //System.out.println(stringer.toString());
+	        Log.debug(stringer.toString());
+	        
 	        response.setStatus(HttpServletResponse.SC_OK);
 	        response.setContentType("text");
 	        response.getWriter().println(stringer.toString());
 	        
         } catch (JSONException e) {
-			e.printStackTrace(System.err);
+			//e.printStackTrace(System.err);
+        	Log.warn(e);
 			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
 			return;
 
         } catch (SQLException e) {
-			e.printStackTrace(System.err);
+			//e.printStackTrace(System.err);
+        	Log.warn(e);
 			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
 			return;
 
         } catch (InstantiationException e) {
-			e.printStackTrace(System.err);
+			//e.printStackTrace(System.err);
+        	Log.warn(e);
 			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
 			return;
 		
         } catch (IllegalAccessException e) {
-			e.printStackTrace(System.err);
+			//e.printStackTrace(System.err);
+        	Log.warn(e);
 			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
 			return;
 
 		} catch (InvocationTargetException e) {
-			e.printStackTrace(System.err);
+			//e.printStackTrace(System.err);
+			Log.warn(e);
 			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
 			return;
 		}
@@ -169,11 +188,15 @@ public class DBObjectListServlet<T extends DBObject> extends SkeletonDBServlet {
 
         		} catch (NoSuchFieldException e) {
         			// do nothing.
+        			Log.debug(e);
 				}
         	}
 
         	String query = obj.queryString();
-        	System.out.println(String.format("query: %s", query));
+        	
+        	//System.out.println(String.format("query: %s", query));
+        	Log.debug(String.format("query: %s", query));
+        	
         	ResultSet rs = stmt.executeQuery(query);
         	
         	if(contentType.equals(TYPE_JSON)) { 
@@ -224,26 +247,33 @@ public class DBObjectListServlet<T extends DBObject> extends SkeletonDBServlet {
 
 	    	response.setContentType(contentType);
 	        response.setStatus(HttpServletResponse.SC_OK);
+
+	        Log.debug(stringer.toString());
 	        response.getWriter().println(stringer.toString());
 
         } catch (JSONException e) {
-			e.printStackTrace(System.err);
+			//e.printStackTrace(System.err);
+        	Log.warn(e);
 			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
 			return;
 		} catch (SQLException e) {
-			e.printStackTrace(System.err);
+			//e.printStackTrace(System.err);
+			Log.warn(e);
 			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
 			return;
 		} catch (InstantiationException e) {
-			e.printStackTrace(System.err);
+			//e.printStackTrace(System.err);
+			Log.warn(e);
 			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
 			return;
 		} catch (IllegalAccessException e) {
-			e.printStackTrace(System.err);
+			//e.printStackTrace(System.err);
+			Log.warn(e);
 			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
 			return;
 		} catch (InvocationTargetException e) {
-			e.printStackTrace(System.err);
+			//e.printStackTrace(System.err);
+			Log.warn(e);
 			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
 			return;
 		}
