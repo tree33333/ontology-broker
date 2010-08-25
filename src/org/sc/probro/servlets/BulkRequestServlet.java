@@ -1,17 +1,21 @@
 package org.sc.probro.servlets;
 
 import java.io.IOException;
+import java.io.StringReader;
 import java.sql.*;
 import java.util.*;
 import java.io.PrintWriter;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URLDecoder;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.eclipse.jetty.util.log.Log;
 import org.sc.probro.BrokerProperties;
+import org.sc.probro.BulkRequestTable;
 import org.sc.probro.data.DBObject;
 import org.sc.probro.data.Metadata;
 import org.sc.probro.data.Request;
@@ -149,9 +153,60 @@ public class BulkRequestServlet extends SkeletonDBServlet {
 		writer.println();		
 	}
 
-	protected void doPost(HttpServletRequest request,
-			HttpServletResponse response) throws ServletException, IOException {
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		
+		String bulkResponse = request.getParameter("update");
+		if(bulkResponse == null) {
+			String msg = "No 'update' parameter given.";
+			Log.warn(msg);
+			response.sendError(HttpServletResponse.SC_BAD_REQUEST, msg);
+			return;
+		}
+		
+		bulkResponse = URLDecoder.decode(bulkResponse, "UTF-8");
+		BulkRequestTable table = new BulkRequestTable(new StringReader(bulkResponse));
 
+		try { 
+			Connection cxn = dbSource.getConnection();
+			try { 
+				Statement stmt = cxn.createStatement();
+				try { 
+					for(int i = 0; i < table.getNumRows(); i++) {
+						
+						// retrieve the request line from the submitted bulk request table, 
+						// and the corresponding request entry from the database...
+						Request submittedReq = table.getRequest(i);
+						Request dbReq = submittedReq.loadDBVersion(Request.class, stmt);
+						
+						//... and check to make sure that the bulk request didn't illegaly
+						// update one of the values in the request.
+						if(!submittedReq.isSubsetOf(dbReq)) {
+							String msg = "Bulk request contained an illegal update of request " + submittedReq.request_id;
+							Log.info(msg);
+							response.sendError(HttpServletResponse.SC_BAD_REQUEST, msg);
+							return;
+						}
+						
+						// if everything is kosher, than get the updated status of the request,
+						// change, and save.
+						submittedReq.response_code = table.getNewStatus(i);
+						stmt.executeUpdate(submittedReq.saveString());
+					}
+				} finally { 
+					stmt.close();
+				}
+
+			} finally { 
+				cxn.close();
+			}
+		} catch (SQLException e) {
+			Log.warn(e);
+			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+			return;
+		}
+
+		//response.sendError(HttpServletResponse.SC_NOT_IMPLEMENTED, "Not yet implemented.");
+		response.sendRedirect("/");
 	}
 
 }
