@@ -8,8 +8,10 @@ import javax.servlet.Servlet;
 
 import org.apache.jasper.servlet.JspServlet;
 import org.eclipse.jetty.server.Handler;
+import org.eclipse.jetty.server.NCSARequestLog;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.HandlerList;
+import org.eclipse.jetty.server.handler.RequestLogHandler;
 import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
@@ -85,10 +87,26 @@ public class BrokerStart {
         ResourceHandler recs = new ResourceHandler();
         recs.setResourceBase(resourceBase + "/static");
         
-        HandlerList handlers = new HandlerList();
-        handlers.setHandlers(new Handler[] { context, recs });
+        RequestLogHandler logHandler = new RequestLogHandler();
         
-        server.setHandler(handlers);
+        HandlerList handlers = new HandlerList();
+        handlers.setHandlers(new Handler[] { context, recs  });
+        
+        logHandler.setHandler(handlers);
+        
+        server.setHandler(logHandler);
+        
+        //server.setHandler(handlers);
+        
+        // Taken from example: 
+        // http://wiki.eclipse.org/Jetty/Tutorial/RequestLog
+        NCSARequestLog requestLog = new NCSARequestLog("./logs/broker-yyyy_mm_dd.request.log");
+        requestLog.setRetainDays(90);
+        requestLog.setAppend(true);
+        requestLog.setExtended(false);
+        requestLog.setLogTimeZone("GMT");
+        logHandler.setRequestLog(requestLog);
+        
 	}
 	
 	public void addServlet(String servletName, Servlet servlet, String firstMapping, String... mappings) { 
