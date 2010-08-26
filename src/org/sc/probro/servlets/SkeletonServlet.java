@@ -8,6 +8,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -22,6 +24,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.sql.DataSource;
 
 import org.apache.derby.jdbc.EmbeddedDataSource;
+import org.eclipse.jetty.util.log.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
@@ -33,7 +36,27 @@ public abstract class SkeletonServlet extends HttpServlet {
 	public SkeletonServlet() {
     	
     }
-    
-    protected abstract void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException;
-    protected abstract void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException;
+ 
+	public static Map<String,String[]> decodedParams(HttpServletRequest request) { 
+		Map<String,ArrayList<String>> pmap = new LinkedHashMap<String,ArrayList<String>>();
+		
+		Enumeration paramEnum = request.getParameterNames();
+		while(paramEnum.hasMoreElements()) { 
+			String paramName = (String)paramEnum.nextElement();
+			if(!pmap.containsKey(paramName)) { pmap.put(paramName, new ArrayList<String>()); }
+			try {
+				String param = URLDecoder.decode(request.getParameter(paramName), "UTF-8");
+				pmap.get(paramName).add(param);
+			} catch (UnsupportedEncodingException e) {
+				Log.warn(e);
+				throw new IllegalArgumentException(paramName);
+			}
+		}
+		
+		Map<String,String[]> params = new LinkedHashMap<String,String[]>();
+		for(String key : pmap.keySet()) { 
+			params.put(key, pmap.get(key).toArray(new String[0]));
+		}
+		return params;
+	}
 }
