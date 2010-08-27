@@ -4,11 +4,16 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URLDecoder;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.eclipse.jetty.util.log.Log;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -74,34 +79,41 @@ public class TextQueryServlet extends SkeletonServlet {
 		sb.append("</tr>");
 		return sb.toString();
 	}
+	
+	private static Set<String> SUPPORTED_CONTENT_TYPES = 
+		new TreeSet<String>(Arrays.asList(CONTENT_TYPE_JSON, CONTENT_TYPE_HTML));
 
 	protected void doGet(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException, IOException {
 		
-		String query = request.getParameter("search");
-		String format = request.getParameter("format");
-		if(query == null) { 
-			response.sendError(HttpServletResponse.SC_BAD_REQUEST, "No request given.");
+		Map<String,String[]> params = decodedParams(request);
+		
+		if(!params.containsKey("search")) {
+			String msg = "No search term given";
+			Log.warn(msg);
+			response.sendError(HttpServletResponse.SC_BAD_REQUEST, msg);
 			return;
 		}
 		
-		if(format==null) { format = "json"; }
+		String query = params.get("search")[0];
+		String contentType = decodeResponseType(params, CONTENT_TYPE_JSON);
 		
-		String contentType = "application/json";
-		if(format.equals("html")) { contentType = "text/html"; }
-		
-		query = URLDecoder.decode(query, "UTF-8");
+		if(!SUPPORTED_CONTENT_TYPES.contains(contentType)) { 
+			
+		}
+
 		
 		try {
 			JSONArray hits = searcher.evaluate(query);
 			
 			response.setContentType(contentType);
 			response.setStatus(HttpServletResponse.SC_OK);
+			
+			if(contentType.equals(CONTENT_TYPE_JSON)) { 
 
-			if(format.equals("json")) { 
 				response.getWriter().println(hits.toString());
 				
-			} else if(format.equals("html")) {
+			} else if(contentType.equals(CONTENT_TYPE_HTML)) {
 				
 				PrintWriter pw = response.getWriter();
 				pw.println("<table>");
@@ -114,14 +126,10 @@ public class TextQueryServlet extends SkeletonServlet {
 				}
 				pw.println("</table>");
 				
-			} else { 
-				response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Unknown format: " + format);
-				return;				
 			}
 			
 		} catch (JSONException e) {
-			e.printStackTrace(System.err);
-			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+			raiseInternalError(response, e);
 			return;
 		}
 		
@@ -129,6 +137,8 @@ public class TextQueryServlet extends SkeletonServlet {
 
 	protected void doPost(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException, IOException {
+		
+		response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED, "Not a valid method call.");
 	}
 
 }

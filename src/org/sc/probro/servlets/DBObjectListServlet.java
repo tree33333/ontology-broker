@@ -8,8 +8,11 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -112,7 +115,6 @@ public class DBObjectListServlet<T extends DBObject> extends SkeletonDBServlet {
 	        stmt.close();
 	        cxn.close();
 
-	        //System.out.println(stringer.toString());
 	        Log.debug(stringer.toString());
 	        
 	        response.setStatus(HttpServletResponse.SC_OK);
@@ -120,49 +122,40 @@ public class DBObjectListServlet<T extends DBObject> extends SkeletonDBServlet {
 	        response.getWriter().println(stringer.toString());
 	        
         } catch (JSONException e) {
-			//e.printStackTrace(System.err);
-        	Log.warn(e);
-			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+			raiseInternalError(response, e);
 			return;
 
         } catch (SQLException e) {
-			//e.printStackTrace(System.err);
-        	Log.warn(e);
-			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+			raiseInternalError(response, e);
 			return;
 
         } catch (InstantiationException e) {
-			//e.printStackTrace(System.err);
-        	Log.warn(e);
-			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+			raiseInternalError(response, e);
 			return;
 		
         } catch (IllegalAccessException e) {
-			//e.printStackTrace(System.err);
-        	Log.warn(e);
-			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+			raiseInternalError(response, e);
 			return;
 
 		} catch (InvocationTargetException e) {
-			//e.printStackTrace(System.err);
-			Log.warn(e);
-			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+			raiseInternalError(response, e);
 			return;
 		}
-		
-		//response.sendRedirect("/");
-
     }
     
-    private static String TYPE_JSON = "application/json";
-    private static String TYPE_HTML = "text/html";
+    private static Set<String> SUPPORTED_CONTENT_TYPES =
+    	new TreeSet<String>(Arrays.asList(CONTENT_TYPE_HTML, CONTENT_TYPE_JSON));
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
-    	String contentType = TYPE_JSON;
-    	String type = request.getParameter("format");
-    	if(type != null && URLDecoder.decode(type, "UTF-8").toLowerCase().equals("html")) { 
-    		contentType = TYPE_HTML;
+    	Map<String,String[]> params = decodedParams(request);
+    	
+    	String contentType = decodeResponseType(params, CONTENT_TYPE_JSON);
+    	if(contentType == null || !SUPPORTED_CONTENT_TYPES.contains(contentType)) { 
+			String msg = String.format("format %s not supported", params.get("format")[0]);
+			Log.warn(msg);
+			response.sendError(HttpServletResponse.SC_NOT_IMPLEMENTED, msg);
+			return;    		
     	}
 
         StringWriter stringer = new StringWriter();
@@ -199,14 +192,14 @@ public class DBObjectListServlet<T extends DBObject> extends SkeletonDBServlet {
         	
         	ResultSet rs = stmt.executeQuery(query);
         	
-        	if(contentType.equals(TYPE_JSON)) { 
+        	if(contentType.equals(CONTENT_TYPE_JSON)) { 
         		if(keyField != null) {
         			json.object();
         		} else { 
         			json.array();
         		}
         	
-        	} else if(contentType.equals(TYPE_HTML)) { 
+        	} else if(contentType.equals(CONTENT_TYPE_HTML)) { 
         		stringer.write("<table>\n");
         		stringer.write(obj.writeHTMLRowHeader());
         		stringer.write("\n");
@@ -215,7 +208,7 @@ public class DBObjectListServlet<T extends DBObject> extends SkeletonDBServlet {
 			while(rs.next()) {
 				T res = resultConstructor.newInstance(rs);
 
-				if(contentType.equals(TYPE_JSON)) {
+				if(contentType.equals(CONTENT_TYPE_JSON)) {
 					
 					if(keyField != null) {
 						String keyValue = String.valueOf(keyField.get(res));
@@ -224,20 +217,20 @@ public class DBObjectListServlet<T extends DBObject> extends SkeletonDBServlet {
 					
 					res.writeJSONObject(json);
 				
-				} else if (contentType.equals(TYPE_HTML)) { 
+				} else if (contentType.equals(CONTENT_TYPE_HTML)) { 
 					stringer.write(res.writeHTMLObject(true));
 	        		stringer.write("\n");
 				}
 			}
 				
-        	if(contentType.equals(TYPE_JSON)) { 
+        	if(contentType.equals(CONTENT_TYPE_JSON)) { 
         		if(keyField != null) {
         			json.endObject();
         		} else { 
         			json.endArray();
         		}
         	
-        	} else if(contentType.equals(TYPE_HTML)) { 
+        	} else if(contentType.equals(CONTENT_TYPE_HTML)) { 
         		stringer.write("</table>");
         	}
 			
@@ -252,29 +245,19 @@ public class DBObjectListServlet<T extends DBObject> extends SkeletonDBServlet {
 	        response.getWriter().println(stringer.toString());
 
         } catch (JSONException e) {
-			//e.printStackTrace(System.err);
-        	Log.warn(e);
-			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
-			return;
+         	raiseInternalError(response, e);
+         	return;
 		} catch (SQLException e) {
-			//e.printStackTrace(System.err);
-			Log.warn(e);
-			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+         	raiseInternalError(response, e);
 			return;
 		} catch (InstantiationException e) {
-			//e.printStackTrace(System.err);
-			Log.warn(e);
-			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+         	raiseInternalError(response, e);
 			return;
 		} catch (IllegalAccessException e) {
-			//e.printStackTrace(System.err);
-			Log.warn(e);
-			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+         	raiseInternalError(response, e);
 			return;
 		} catch (InvocationTargetException e) {
-			//e.printStackTrace(System.err);
-			Log.warn(e);
-			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+         	raiseInternalError(response, e);
 			return;
 		}
     }

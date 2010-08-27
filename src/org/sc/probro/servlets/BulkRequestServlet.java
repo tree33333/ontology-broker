@@ -62,20 +62,16 @@ public class BulkRequestServlet extends SkeletonDBServlet {
 			}
 
 		} catch (InstantiationException e) {
-			e.printStackTrace(System.err);
-			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+			raiseInternalError(response, e);
 			return null;
 		} catch (IllegalAccessException e) {
-			e.printStackTrace(System.err);
-			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+			raiseInternalError(response, e);
 			return null;
 		} catch (InvocationTargetException e) {
-			e.printStackTrace(System.err);
-			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+			raiseInternalError(response, e);
 			return null;
 		} catch (NoSuchMethodException e) {
-			e.printStackTrace(System.err);
-			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+			raiseInternalError(response, e);
 			return null;
 		} finally { 
 			cxn.close();
@@ -139,8 +135,7 @@ public class BulkRequestServlet extends SkeletonDBServlet {
 			
 
 		} catch (SQLException e) {
-			e.printStackTrace(System.err);
-			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+			raiseInternalError(response, e);
 			return;
 		}
 	}
@@ -158,8 +153,7 @@ public class BulkRequestServlet extends SkeletonDBServlet {
 		String bulkResponse = request.getParameter("update");
 		if(bulkResponse == null) {
 			String msg = "No 'update' parameter given.";
-			Log.warn(msg);
-			response.sendError(HttpServletResponse.SC_BAD_REQUEST, msg);
+			raiseException(response, HttpServletResponse.SC_BAD_REQUEST, msg);
 			return;
 		}
 		
@@ -182,8 +176,7 @@ public class BulkRequestServlet extends SkeletonDBServlet {
 						// update one of the values in the request.
 						if(!submittedReq.isSubsetOf(dbReq)) {
 							String msg = "Bulk request contained an illegal update of request " + submittedReq.request_id;
-							Log.info(msg);
-							response.sendError(HttpServletResponse.SC_BAD_REQUEST, msg);
+							raiseException(response, HttpServletResponse.SC_CONFLICT, msg);
 							return;
 						}
 						
@@ -199,14 +192,13 @@ public class BulkRequestServlet extends SkeletonDBServlet {
 			} finally { 
 				cxn.close();
 			}
+			
 		} catch (SQLException e) {
-			Log.warn(e);
-			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+			raiseInternalError(response, e);
 			return;
 		}
 
 		//response.sendError(HttpServletResponse.SC_NOT_IMPLEMENTED, "Not yet implemented.");
 		response.sendRedirect("/");
 	}
-
 }

@@ -10,6 +10,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.eclipse.jetty.util.log.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONWriter;
@@ -38,11 +39,13 @@ public class DBObjectServlet<T extends DBObject> extends SkeletonDBServlet {
 			tableName = (objectClass.getSimpleName() + "S").toUpperCase();
 			idField = objectClass.getField(idFieldName);
 			
+			Log.info(String.format("DBObjectServlet started: %s", cls.getSimpleName()));
+			
 		} catch (NoSuchMethodException e) {
-			e.printStackTrace(System.err);
+			Log.warn(e);
 			throw new IllegalArgumentException(cls.getCanonicalName());
 		} catch (NoSuchFieldException e) {
-			e.printStackTrace(System.err);
+			Log.warn(e);
 			throw new IllegalArgumentException(cls.getCanonicalName());
 		}
 	}
@@ -65,11 +68,9 @@ public class DBObjectServlet<T extends DBObject> extends SkeletonDBServlet {
 			}
 		
 		} catch (SQLException e) {
-			e.printStackTrace(System.err);
-			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+			raiseInternalError(response, e);
+			return false;
 		}		
-
-		return false;
 	}
 
 	private T load(T template, HttpServletResponse response) throws IOException { 
@@ -84,23 +85,20 @@ public class DBObjectServlet<T extends DBObject> extends SkeletonDBServlet {
 						if(rs.next()) { 
 							return resultConstructor.newInstance(rs);
 						} else { 
-							response.sendError(HttpServletResponse.SC_BAD_REQUEST, template.toString());
+							raiseException(response, HttpServletResponse.SC_BAD_REQUEST, template.toString());
 							return null;
 						}
 						
 					} catch (InstantiationException e) {
-						e.printStackTrace(System.err);
-						response.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+						raiseInternalError(response, e);
 						return null;
 
 					} catch (IllegalAccessException e) {
-						e.printStackTrace(System.err);
-						response.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+						raiseInternalError(response, e);
 						return null;
 
 					} catch (InvocationTargetException e) {
-						e.printStackTrace(System.err);
-						response.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+						raiseInternalError(response, e);
 						return null;
 
 					} finally { 
@@ -116,8 +114,7 @@ public class DBObjectServlet<T extends DBObject> extends SkeletonDBServlet {
 			}
 		
 		} catch (SQLException e) {
-			e.printStackTrace(System.err);
-			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+			raiseInternalError(response, e);
 			return null;
 		}		
 	}
@@ -149,16 +146,13 @@ public class DBObjectServlet<T extends DBObject> extends SkeletonDBServlet {
 			idField.set(template, requestID);
 
 		} catch (InstantiationException e1) {
-			e1.printStackTrace(System.err);
-			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e1.getMessage());
+			raiseInternalError(response, e1);
 			return;
 		} catch (IllegalAccessException e1) {
-			e1.printStackTrace(System.err);
-			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e1.getMessage());
+			raiseInternalError(response, e1);
 			return;
 		} catch (InvocationTargetException e1) {
-			e1.printStackTrace(System.err);
-			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e1.getMessage());
+			raiseInternalError(response, e1);
 			return;
 		}
 
@@ -177,9 +171,7 @@ public class DBObjectServlet<T extends DBObject> extends SkeletonDBServlet {
 					response.getWriter().println(stringer.toString());
 					
 				} catch (JSONException e) {
-					e.printStackTrace(System.err);
-					response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, 
-							e.getMessage());
+					raiseInternalError(response, e);
 					return;
 				}
 				
@@ -228,33 +220,29 @@ public class DBObjectServlet<T extends DBObject> extends SkeletonDBServlet {
 				}
 				
 			} catch (JSONException e) {
-				e.printStackTrace(System.err);
-				response.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+				raiseInternalError(response, e);
 				return;
 
 			} catch (NoSuchFieldException e) {
-				e.printStackTrace(System.err);
-				response.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+				raiseInternalError(response, e);
 				return;
 
 			} catch (IllegalAccessException e) {
-				e.printStackTrace(System.err);
-				response.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+				raiseInternalError(response, e);
 				return;
 
 			} catch (InstantiationException e) {
-				e.printStackTrace(System.err);
-				response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+				raiseInternalError(response, e);
 				return;
 				
 			} catch (InvocationTargetException e) {
-				e.printStackTrace(System.err);
-				response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+				raiseInternalError(response, e);
 				return;
 			}
 			
 		} else { 
-			response.sendError(HttpServletResponse.SC_BAD_REQUEST, "No 'update' parameter sent.");
+			String msg = "No 'update' paramter sent.";
+			raiseException(response, HttpServletResponse.SC_BAD_REQUEST, msg);
 			return;
 		}
 	}

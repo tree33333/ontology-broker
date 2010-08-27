@@ -19,6 +19,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.sql.DataSource;
 
 import org.apache.derby.jdbc.EmbeddedDataSource;
+import org.eclipse.jetty.util.log.Log;
 import org.json.JSONException;
 import org.json.JSONWriter;
 import org.sc.probro.BrokerProperties;
@@ -43,6 +44,7 @@ public class RequestListServlet extends SkeletonDBServlet {
     		try {
 				indexer = new PROIndexer(new File(luceneIndexPath));
 			} catch (IOException e) {
+				Log.warn(e);
 				throw new ServletException(e);
 			}
     	}
@@ -153,23 +155,29 @@ public class RequestListServlet extends SkeletonDBServlet {
 	        Connection cxn = dbSource.getConnection();
 	        Statement stmt = cxn.createStatement();
 	        String insertString = obj.insertString();
-	        System.out.println(insertString);
+	        
+	        Log.debug(insertString);
 	        
 	        stmt.execute(insertString, Statement.RETURN_GENERATED_KEYS);
 	        
 	        ResultSet generated = stmt.getGeneratedKeys();
 	        if(generated.next()) { obj.request_id = generated.getInt(1); }
 
-	        System.out.println(String.format("REQUEST_ID: %d", obj.request_id));
+	        Log.debug(String.format("REQUEST_ID: %d", obj.request_id));
+	        
 	        generated.close();
 	        
 	        // Insert the associated metadata items.
 	        for(Metadata m : metadatas) { 
 	        	m.request_id = obj.request_id;
+	        	
 	        	if(stmt.executeUpdate(m.insertString()) > 0) { 
-	        		System.out.println(String.format("Inserted Metadata: %s", m.toString()));
+	        		String msg = String.format("Inserted Metadata: %s", m.toString());
+	        		Log.debug(msg);
+	        		
 	        	} else { 
-	        		System.out.println(String.format("Could not insert Metadata: %s", m.toString()));
+	        		String msg = String.format("Could not insert Metadata: %s", m.toString());
+	        		Log.warn(msg);
 	        	}
 	        }
 	        
@@ -179,27 +187,16 @@ public class RequestListServlet extends SkeletonDBServlet {
 	        // Add the request to the Lucene index, so that it will satisfy future queries.
 	        indexer.addQuery(obj, metadatas);
 
-	        /*
-	        System.out.println(stringer.toString());
-	        response.setStatus(HttpServletResponse.SC_OK);
-	        response.setContentType("text");
-	        response.getWriter().println(stringer.toString());
-	        */
-	        
 	        response.sendRedirect("/");
 	        
         } catch (JSONException e) {
-			e.printStackTrace(System.err);
-			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+        	raiseInternalError(response, e);
 			return;
 
         } catch (SQLException e) {
-			e.printStackTrace(System.err);
-			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+        	raiseInternalError(response, e);
 			return;
 		}
-		
-		//response.sendRedirect("/");
     }
     
     private static String TYPE_JSON = "application/json";
@@ -235,6 +232,7 @@ public class RequestListServlet extends SkeletonDBServlet {
 					}
 
         		} catch (NoSuchFieldException e) {
+        			Log.warn(e);
         			// do nothing.
 				}
         	}
@@ -281,12 +279,10 @@ public class RequestListServlet extends SkeletonDBServlet {
 	        response.getWriter().println(stringer.toString());
 
         } catch (JSONException e) {
-			e.printStackTrace(System.err);
-			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+        	raiseInternalError(response, e);
 			return;
 		} catch (SQLException e) {
-			e.printStackTrace(System.err);
-			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+        	raiseInternalError(response, e);
 			return;
 		}
     }

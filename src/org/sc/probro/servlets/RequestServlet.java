@@ -45,11 +45,9 @@ public class RequestServlet extends SkeletonDBServlet {
 			}
 		
 		} catch (SQLException e) {
-			e.printStackTrace(System.err);
-			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+			raiseInternalError(response, e);
+			return false;
 		}		
-
-		return false;
 	}
 
 	private Collection<Metadata> loadMetadata(Request req, HttpServletResponse response) throws IOException { 
@@ -81,8 +79,7 @@ public class RequestServlet extends SkeletonDBServlet {
 				}
 
 			} catch (SQLException e) {
-				e.printStackTrace(System.err);
-				response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+				raiseInternalError(response, e);
 				return null;
 			}			
 		}
@@ -102,8 +99,8 @@ public class RequestServlet extends SkeletonDBServlet {
 						if(rs.next()) { 
 							return new Request(rs);
 						} else { 
-							response.sendError(HttpServletResponse.SC_BAD_REQUEST, 
-									String.format("Unknown Request: %d", requestID));
+							String msg = String.format("Unknown Request: %d", requestID);
+							raiseException(response, HttpServletResponse.SC_BAD_REQUEST, msg);
 							return null;
 						}
 						
@@ -120,8 +117,7 @@ public class RequestServlet extends SkeletonDBServlet {
 			}
 		
 		} catch (SQLException e) {
-			e.printStackTrace(System.err);
-			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+			raiseInternalError(response, e);
 			return null;
 		}		
 	}
@@ -141,8 +137,9 @@ public class RequestServlet extends SkeletonDBServlet {
 		String path = request.getRequestURI();
 		Pattern p = Pattern.compile("^/request/(\\d+)[^\\d]?.*$");
 		Matcher m = p.matcher(path);
+
 		if(!m.matches()) { 
-			response.sendError(HttpServletResponse.SC_BAD_REQUEST, path);
+			raiseException(response, HttpServletResponse.SC_BAD_REQUEST, path);
 			return;
 		}
 		requestID = Integer.parseInt(m.group(1));
@@ -174,9 +171,7 @@ public class RequestServlet extends SkeletonDBServlet {
 					response.getWriter().println(stringer.toString());
 					
 				} catch (JSONException e) {
-					e.printStackTrace(System.err);
-					response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, 
-							e.getMessage());
+					raiseInternalError(response, e);
 					return;
 				}
 				
@@ -210,7 +205,7 @@ public class RequestServlet extends SkeletonDBServlet {
 		}
 		requestID = Integer.parseInt(m.group(1));
 		
-		String update = request.getParameter("update");
+		String update = request.getParameter("request");
 		if(update != null) {
 			update = URLDecoder.decode(update, "UTF-8");
 			try {
@@ -232,23 +227,21 @@ public class RequestServlet extends SkeletonDBServlet {
 				}
 				
 			} catch (JSONException e) {
-				e.printStackTrace(System.err);
-				response.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+				raiseInternalError(response, e);
 				return;
 
 			} catch (NoSuchFieldException e) {
-				e.printStackTrace(System.err);
-				response.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+				raiseInternalError(response, e);
 				return;
 
 			} catch (IllegalAccessException e) {
-				e.printStackTrace(System.err);
-				response.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+				raiseInternalError(response, e);
 				return;
 			}
 			
 		} else { 
-			response.sendError(HttpServletResponse.SC_BAD_REQUEST, "No 'update' parameter sent.");
+			String msg = "No 'update' paramter given.";
+			raiseException(response, HttpServletResponse.SC_BAD_REQUEST, msg);
 			return;
 		}
 	}
