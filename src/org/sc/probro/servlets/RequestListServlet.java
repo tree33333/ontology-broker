@@ -232,7 +232,6 @@ public class RequestListServlet extends SkeletonDBServlet {
 					}
 
         		} catch (NoSuchFieldException e) {
-        			Log.warn(e);
         			// do nothing.
 				}
         	}

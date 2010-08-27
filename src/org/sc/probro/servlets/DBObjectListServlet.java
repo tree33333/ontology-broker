@@ -181,7 +181,7 @@ public class DBObjectListServlet<T extends DBObject> extends SkeletonDBServlet {
 
         		} catch (NoSuchFieldException e) {
         			// do nothing.
-        			Log.debug(e);
+        			//Log.debug(e);
 				}
         	}
 
