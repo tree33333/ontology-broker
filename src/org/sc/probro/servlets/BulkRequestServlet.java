@@ -14,6 +14,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.eclipse.jetty.util.log.Log;
+import org.sc.probro.BrokerException;
 import org.sc.probro.BrokerProperties;
 import org.sc.probro.BulkRequestTable;
 import org.sc.probro.data.DBObject;
@@ -37,44 +38,48 @@ public class BulkRequestServlet extends SkeletonDBServlet {
 		super(ps);
 	}
 
-	private <T extends DBObject> Collection<T> load(T template, HttpServletResponse response) throws SQLException, IOException { 
+	private <T extends DBObject> Collection<T> load(T template, HttpServletResponse response) throws BrokerException { 
 		LinkedList<T> reqs = new LinkedList<T>();
 
-		Connection cxn = dbSource.getConnection();
-
 		try {
-			Constructor<T> constructor = (Constructor<T>) template.getClass().getConstructor(ResultSet.class);
-			Statement stmt = cxn.createStatement();
-			try { 
-				ResultSet rs = stmt.executeQuery(template.queryString());
+			Connection cxn = dbSource.getConnection();
+
+			try {
+				Constructor<T> constructor = (Constructor<T>) template.getClass().getConstructor(ResultSet.class);
+				Statement stmt = cxn.createStatement();
 				try { 
-					while(rs.next()) { 
-						T req = constructor.newInstance(rs);
-						reqs.add(req);
+					ResultSet rs = stmt.executeQuery(template.queryString());
+					try { 
+						while(rs.next()) { 
+							T req = constructor.newInstance(rs);
+							reqs.add(req);
+						}
+
+					} finally { 
+						rs.close();
 					}
 
 				} finally { 
-					rs.close();
+					stmt.close();
 				}
 
-			} finally { 
-				stmt.close();
-			}
+			} catch (InstantiationException e) {
+				throw new BrokerException(e);
+			} catch (IllegalAccessException e) {
+				throw new BrokerException(e);
+			} catch (InvocationTargetException e) {
+				throw new BrokerException(e);
+			} catch (NoSuchMethodException e) {
+				throw new BrokerException(e);
+			} catch(SQLException e) {
+				throw new BrokerException(e);
 
-		} catch (InstantiationException e) {
-			raiseInternalError(response, e);
-			return null;
-		} catch (IllegalAccessException e) {
-			raiseInternalError(response, e);
-			return null;
-		} catch (InvocationTargetException e) {
-			raiseInternalError(response, e);
-			return null;
-		} catch (NoSuchMethodException e) {
-			raiseInternalError(response, e);
-			return null;
-		} finally { 
-			cxn.close();
+			} finally { 
+				cxn.close();
+			}
+		
+		} catch (SQLException e) {
+			throw new BrokerException(e);
 		}
 
 		return reqs;
@@ -134,9 +139,8 @@ public class BulkRequestServlet extends SkeletonDBServlet {
 			}
 			
 
-		} catch (SQLException e) {
-			raiseInternalError(response, e);
-			return;
+		} catch (BrokerException e) {
+			handleException(response, e);
 		}
 	}
 	

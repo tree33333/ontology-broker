@@ -30,6 +30,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.json.JSONWriter;
+import org.sc.probro.BrokerException;
+import org.sc.probro.data.DBObject;
 import org.sc.probro.data.Request;
 
 public abstract class SkeletonServlet extends HttpServlet {
@@ -38,22 +40,15 @@ public abstract class SkeletonServlet extends HttpServlet {
     	
     }
 	
-	public static Map<Integer,String> ERROR_NAMES;
-
 	public static final String CONTENT_TYPE_JSON = "application/json";
 	public static final String CONTENT_TYPE_HTML = "text/html";
 	
-	static { 
-		ERROR_NAMES = new TreeMap<Integer,String>();
-		ERROR_NAMES.put(HttpServletResponse.SC_BAD_REQUEST, "Bad Request");
-		ERROR_NAMES.put(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
-		ERROR_NAMES.put(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
-		ERROR_NAMES.put(HttpServletResponse.SC_GONE, "Gone");
-		ERROR_NAMES.put(HttpServletResponse.SC_REQUEST_ENTITY_TOO_LARGE, "Request Entity Too Large");
-		ERROR_NAMES.put(HttpServletResponse.SC_METHOD_NOT_ALLOWED, "Method Not Allowed");
-		ERROR_NAMES.put(HttpServletResponse.SC_CONFLICT, "Conflict");
-		ERROR_NAMES.put(HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE, "Unsupported Media Type");
-		ERROR_NAMES.put(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal Server Error");
+	public void handleException(HttpServletResponse response, BrokerException e) throws IOException {
+		if(e.isFromThrowable()) { 
+			Log.warn(e.getThrowable());
+		}
+		Log.warn(e.getDescription());
+		response.sendError(e.getCode(), e.asJSON().toString());
 	}
 	
 	public static void raiseInternalError(HttpServletResponse response, Throwable t) throws IOException { 
@@ -69,7 +64,7 @@ public abstract class SkeletonServlet extends HttpServlet {
 			writer
 				.object()
 				.key("error_code").value(errorCode)
-				.key("error_name").value(ERROR_NAMES.get(errorCode))
+				.key("error_name").value(BrokerException.ERROR_NAMES.get(errorCode))
 				.key("error_description").value(msg)
 				.endObject();
 
@@ -119,6 +114,65 @@ public abstract class SkeletonServlet extends HttpServlet {
 	
 	public static String decodeResponseType(HttpServletRequest request, String defaultType) { 
 		return decodeResponseType(decodedParams(request), defaultType);
+	}
+	
+	public <T> T getRequiredParam(HttpServletRequest req, String name, Class<T> type) throws BrokerException { 
+		T value = getOptionalParam(req, name, type);
+		
+		if(value == null) { 
+			throw new BrokerException(HttpServletResponse.SC_BAD_REQUEST, 
+					String.format("Missing required parameter: %s", name));
+		}
+		
+		return value;
+	}
+	
+	public <T> T getOptionalParam(HttpServletRequest req, String name, Class<T> type) throws BrokerException { 
+		T param = null;
+		
+		String undecoded = req.getParameter(name);
+		if(undecoded != null) { 
+			try {
+				String decoded = URLDecoder.decode(undecoded, "UTF-8");
+				
+				if(DBObject.isSubclass(type, String.class)) { 
+					return (T)decoded;
+					
+				} else if (DBObject.isSubclass(type, Integer.class)) {
+					int parsed = Integer.parseInt(decoded);
+					return (T)(new Integer(parsed));
+
+				} else if (DBObject.isSubclass(type, Double.class)) {
+					int parsed = Integer.parseInt(decoded);
+					return (T)(new Integer(parsed));
+
+				} else if (DBObject.isSubclass(type, Boolean.class)) {
+					String lower = decoded.toLowerCase();
+					if(!lower.equals("true") && !lower.equals("1")) { 
+						return (T)(Boolean.FALSE);
+					} else { 
+						return (T)(Boolean.TRUE);						
+					}
+				
+				} else if (DBObject.isSubclass(type, JSONObject.class)) {
+					return (T)(new JSONObject(decoded));
+					
+				} else { 
+					throw new IllegalArgumentException(type.getCanonicalName());
+				}
+			
+			} catch (UnsupportedEncodingException e) {
+				throw new BrokerException(e);
+				
+			} catch(NumberFormatException e) { 
+				throw new BrokerException(HttpServletResponse.SC_BAD_REQUEST, e);
+				
+			} catch (JSONException e) {
+				throw new BrokerException(HttpServletResponse.SC_BAD_REQUEST, e);
+			}
+		}
+		
+		return param;
 	}
 	
 	public static String decodeResponseType(Map<String,String[]> params, String defaultType) { 

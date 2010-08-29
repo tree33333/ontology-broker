@@ -14,6 +14,7 @@ import org.eclipse.jetty.util.log.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONWriter;
+import org.sc.probro.BrokerException;
 import org.sc.probro.BrokerProperties;
 import org.sc.probro.data.DBObject;
 import org.sc.probro.data.Metadata;
@@ -73,7 +74,7 @@ public class DBObjectServlet<T extends DBObject> extends SkeletonDBServlet {
 		}		
 	}
 
-	private T load(T template, HttpServletResponse response) throws IOException { 
+	private T load(T template, HttpServletResponse response) throws BrokerException { 
 		try {
 			Connection cxn = dbSource.getConnection();
 			try { 
@@ -85,21 +86,17 @@ public class DBObjectServlet<T extends DBObject> extends SkeletonDBServlet {
 						if(rs.next()) { 
 							return resultConstructor.newInstance(rs);
 						} else { 
-							raiseException(response, HttpServletResponse.SC_BAD_REQUEST, template.toString());
-							return null;
+							throw new BrokerException(HttpServletResponse.SC_BAD_REQUEST, template.toString());
 						}
 						
 					} catch (InstantiationException e) {
-						raiseInternalError(response, e);
-						return null;
+						throw new BrokerException(e);
 
 					} catch (IllegalAccessException e) {
-						raiseInternalError(response, e);
-						return null;
+						throw new BrokerException(e);
 
 					} catch (InvocationTargetException e) {
-						raiseInternalError(response, e);
-						return null;
+						throw new BrokerException(e);
 
 					} finally { 
 						rs.close();
@@ -114,8 +111,7 @@ public class DBObjectServlet<T extends DBObject> extends SkeletonDBServlet {
 			}
 		
 		} catch (SQLException e) {
-			raiseInternalError(response, e);
-			return null;
+			throw new BrokerException(e);
 		}		
 	}
 
@@ -156,33 +152,38 @@ public class DBObjectServlet<T extends DBObject> extends SkeletonDBServlet {
 			return;
 		}
 
-		T loaded = load(template, response);
-		
-		if(loaded != null) { 
-			if(responseType.equals("application/json")) {
-				StringWriter stringer = new StringWriter();
-				JSONWriter writer = new JSONWriter(stringer);
-				
-				try {
-					loaded.writeJSONObject(writer);
-										
+		try { 
+			T loaded = load(template, response);
+
+			if(loaded != null) { 
+				if(responseType.equals("application/json")) {
+					StringWriter stringer = new StringWriter();
+					JSONWriter writer = new JSONWriter(stringer);
+
+					try {
+						loaded.writeJSONObject(writer);
+
+						response.setContentType(responseType);
+						response.setStatus(HttpServletResponse.SC_OK);
+						response.getWriter().println(stringer.toString());
+
+					} catch (JSONException e) {
+						raiseInternalError(response, e);
+						return;
+					}
+
+				} else if (responseType.equals("text/html")) { 
+
 					response.setContentType(responseType);
 					response.setStatus(HttpServletResponse.SC_OK);
-					response.getWriter().println(stringer.toString());
-					
-				} catch (JSONException e) {
-					raiseInternalError(response, e);
-					return;
-				}
-				
-			} else if (responseType.equals("text/html")) { 
 
-				response.setContentType(responseType);
-				response.setStatus(HttpServletResponse.SC_OK);
-				
-				PrintWriter printer = response.getWriter();
-				printer.println(loaded.writeHTMLObject(false));
+					PrintWriter printer = response.getWriter();
+					printer.println(loaded.writeHTMLObject(false));
+				}
 			}
+		} catch(BrokerException e) { 
+			handleException(response, e);
+			return;
 		}
 	}
 

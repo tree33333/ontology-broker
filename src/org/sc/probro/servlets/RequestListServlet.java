@@ -66,7 +66,9 @@ public class RequestListServlet extends SkeletonDBServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         StringWriter stringer = new StringWriter();
         JSONWriter json = new JSONWriter(stringer);
-        System.out.println("doPost()");
+        
+        Log.debug("RequestListServlet.doPost()");
+
         Pattern metadataKey = Pattern.compile("^metadata_(.*)$");
         
         LinkedList<Metadata> metadatas = new LinkedList<Metadata>();
@@ -237,7 +239,7 @@ public class RequestListServlet extends SkeletonDBServlet {
         	}
 
         	String query = obj.queryString();
-        	System.out.println(String.format("query: %s", query));
+        	Log.debug(String.format("query: %s", query));
         	ResultSet rs = stmt.executeQuery(query);
         	
         	if(contentType.equals(TYPE_JSON)) { 
