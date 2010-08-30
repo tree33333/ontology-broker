@@ -126,8 +126,14 @@ public class RequestListServlet extends SkeletonDBServlet {
 					}
 					
 				} else { 
-					json.key(name).value(value);
-					obj.setFromString(name, value);
+					try {
+						Field f = obj.getClass().getField(name);
+						json.key(name).value(value);
+						obj.setFromString(name, value);
+						
+					} catch (NoSuchFieldException e) {
+						// do nothing! 
+					}
 				}
 			}
 			
@@ -144,8 +150,11 @@ public class RequestListServlet extends SkeletonDBServlet {
 			}
 			
 			obj.ontology_term = null;
-			obj.response_code = Request.RESPONSE_PENDING;
-			json.key("response_code").value(String.valueOf(obj.response_code));				
+			
+			if(obj.response_code == null) {
+				obj.response_code = Request.RESPONSE_PENDING;
+				json.key("response_code").value(String.valueOf(obj.response_code));
+			}
 			
 	        json.endObject();
 
@@ -156,16 +165,16 @@ public class RequestListServlet extends SkeletonDBServlet {
 	        // 
 	        Connection cxn = dbSource.getConnection();
 	        Statement stmt = cxn.createStatement();
-	        String insertString = obj.insertString();
 	        
-	        Log.debug(insertString);
+	        Preparation prep = obj.savePreparation(cxn);
+	        prep.setFromObject(obj);
 	        
-	        stmt.execute(insertString, Statement.RETURN_GENERATED_KEYS);
+	        prep.stmt.executeUpdate();
 	        
-	        ResultSet generated = stmt.getGeneratedKeys();
+	        ResultSet generated = prep.stmt.getGeneratedKeys();
 	        if(generated.next()) { obj.request_id = generated.getInt(1); }
 
-	        Log.debug(String.format("REQUEST_ID: %d", obj.request_id));
+	        Log.info(String.format("CREATED: request_id=%d", obj.request_id));
 	        
 	        generated.close();
 	        
@@ -183,6 +192,7 @@ public class RequestListServlet extends SkeletonDBServlet {
 	        	}
 	        }
 	        
+	        prep.close();
 	        stmt.close();
 	        cxn.close();
 	        
