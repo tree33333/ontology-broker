@@ -13,34 +13,22 @@ $(document).ready(function() {
 
 	var get_params = function() {
 		var uri = window.location.href;
-		var paramIndex = uri.indexOf('?');
-		var dict = {};
-		if(paramIndex !== -1) { 
-			var paramArray = uri.slice(paramIndex + 1, uri.length).split('&');
-			var i; 
-			for(i = 0; i < paramArray.length; i++) { 
-				var pair = paramArray[i].split('=', 2);
-				var key = decodeURI(pair[0]);
-				if(pair.length > 1) { 
-					var value = decodeURI(pair[1]);
-					dict[key] = value;
-				} else { 
-					dict[key] = true;
-				}
-			}
-		}
-		return dict;
+		return Broker.get_params(uri);
 	};
 	
 	var params = get_params();
 
 	if(params['request']) { 
-		var reqURI = '/request/' + params['request'] + '/?format=html';
-		Broker.debug(reqURI);
-		$.get(reqURI,
-			function(requesthtml) { 
-				$('#mainbody').append(requesthtml);	
-			}, 'html');
+		if(params['edit'] && params['edit'] === 'true') { 
+			window.location = '/requestform.html?request_id=' + params['request'];
+		} else { 
+			var reqURI = '/request/' + params['request'] + '/?format=html';
+			Broker.debug(reqURI);
+			$.get(reqURI,
+				function(requesthtml) { 
+					$('#mainbody').append(requesthtml);	
+				}, 'html');
+		}
 	}
 });
 </script> 

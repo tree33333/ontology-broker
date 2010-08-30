@@ -10,7 +10,55 @@
 
 <script type="text/javascript">
 $(document).ready(function() { 
-	//$('#form input.submitbutton').click(function() { alert('clicked'); return false; });
+	var get_params = function() { 
+		return Broker.get_params(window.location.href);
+	};
+
+	var load_request = function(request_id) { 
+		$.getJSON('/request/' + request_id + '/',
+			function(requestdata) { 
+				var request = requestdata.request;
+				var metadata = requestdata.metadata;
+				var i;
+
+				$('#requestform [name="search_text"]').attr('value', request.search_text);		
+				$('#requestform [name="context"]').attr('value', request.context);		
+				$('#requestform [name="provenance"]').attr('value', request.provenance);		
+				$('#requestform [name="date_submitted"]').attr('value', request.date_submitted);		
+				$('#requestform [name="response_code"]').attr('value', request.response_code);
+				$('#requestform #requiredfields').append(
+					'<tr><td>Modify Status:</td><td><input type="text" style="width: 100%;" ' + 
+					'name="new_response_code" value="' + request.response_code +
+					'" /> </td></tr>');
+				$('#requiredfieldset').append('<input type="hidden" name="request_id" value="' + request.request_id + '" />');
+
+				for(i = 0; i < metadata.length; i++) { 
+					var md = metadata[i];
+					var name = 'metadata_' + md.metadata_key;
+					var md_input = $('[name="' + name + '"]');
+					Broker.debug(name + '=' + md.metadata_value);
+
+					if(name === 'metadata_type') { 
+						md_input.removeAttr('checked');
+						var checkselect = 'input[value="' + md.metadata_value + '"]';
+						Broker.debug(checkselect);
+						Broker.debug('Matched: ' + $(checkselect).length);
+						$(checkselect).attr('checked', 'true');
+					} else { 
+						if(md_input.length > 0) { 
+							md_input.attr('value', md.metadata_value);
+						}
+					}
+				}
+
+				$('#requestform').removeAttr('action').attr('action', '/request/' + request_id + '/');
+			});
+	};
+
+	var params = get_params();
+	if(params['request_id']) { 
+		load_request(params['request_id']);
+	}
 });
 </script>
 
@@ -33,12 +81,12 @@ body {
 <div id="header"> <h3 style="text-align: center;">PRO New Term Request</h3> </div> 
 
 <div id="form">
-<form action="/requests" method="POST">
+<form id="requestform" action="/requests" method="POST">
 	<table style="width: 100%;">
 	<tr>
 	<td style="width: 50%; vertical-align: top;">
-		<fieldset><legend>Request Information</legend>
-		<table style="width: 100%;">
+		<fieldset id="requiredfieldset"><legend>Request Information</legend>
+		<table id="requiredfields" style="width: 100%;">
 			<tr><td>Search:</td> <td><input style="width: 100%;" type="text" name="search_text" /> </td></tr>
 			<tr><td>Context:</td><td> <textarea name="context" rows="5" style="width: 100%;" ></textarea> </td><tr>
 			<tr><td>Provenance (URL):</td> <td><input style="width: 100%;" type="text" name="provenance" /> </td></tr>
@@ -47,29 +95,33 @@ body {
 				$('#dateinput').attr('value', Broker.date_string());
 			</script>
 		</table>
-		</fieldset>
 		<input type="hidden" name="ontology_id" value="1" />
 		<input type="hidden" name="user_id" value="1" />
-
-	</td>
-	<td style="vertical-align: top;">
-		<fieldset>
-		<legend>Request Type</legend>
-			<input type="radio" name="metadata_type" value="protein" checked="true">protein</input><br>
-			<input type="radio" name="metadata_type" value="exon"/>exon</input><br>
-			<input type="radio" name="metadata_type" value="site"/>site</input><br>
+		<input type="hidden" name="response_code" value="2" />
 		</fieldset>
 	</td>
+
 	<td style="vertical-align: top;">
 		<fieldset>
-		<legend>Additional Metadata</legend>
+		<legend>Optional Metadata</legend>
 			<table>
 				<tr><td>Region (Coordinates): </td><td> <input type="text" name="metadata_coordinates" /></td></tr>
 				<tr><td>UniProtKB Accession: </td><td> <input type="text" name="metadata_uniprot" /></td></tr>
 				<tr><td>Modification:</td><td> <input type="text" name="metadata_modification" /></td></tr>
 				<tr><td>Organism:</td><td> <input type="text" name="metadata_organism" /></td></tr>
 			</table>
+		<fieldset>
+		<legend>PRO Type</legend>
+			<input type="radio" name="metadata_type" value="protein" checked="true">protein</input><br>
+			<input type="radio" name="metadata_type" value="exon"/>exon</input><br>
+			<input type="radio" name="metadata_type" value="site"/>site</input><br>
+			<input type="radio" name="metadata_type" value="modified_site"/>modified_site</input><br>
+			<input type="radio" name="metadata_type" value="variation_site"/>variation_site</input><br>
+			<input type="radio" name="metadata_type" value="cleavage_product"/>cleavage_product</input><br>
 		</fieldset>
+		</fieldset>
+	</td>
+	<td style="vertical-align: top;">
 	</td>
 	</tr>
 	</table>
@@ -79,6 +131,8 @@ body {
 
 </div>
 
-</body>
+<div id="debug">
+</div>
 
+</body>
 </html>
