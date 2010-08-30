@@ -27,7 +27,46 @@ public class Request extends DBObject {
 	public String date_submitted;
 	public Integer response_code;
 	public Integer ontology_id;
+
+	public Preparation savePreparation(Connection cxn) throws SQLException {
+		String tableName = "REQUESTS";
+		String stmtStr = String.format("INSERT INTO %s (ontology_term, search_text, "+
+				"context, provenance, user_id, date_submitted, response_code, ontology_id) values " + 
+				"(?, ?, ?, ?, ?, ?, ?, ?)", tableName);
+		PreparedStatement ps = cxn.prepareStatement(stmtStr, Statement.RETURN_GENERATED_KEYS);
+		Preparation prep = new Preparation(ps, Request.class, 
+				"ontology_term", 
+				"search_text", 
+				"context", 
+				"provenance", 
+				"user_id", 
+				"date_submitted", 
+				"response_code", 
+				"ontology_id");
+		prep.addClob(2);
+		return prep;
+	}
 	
+	public Preparation updatePreparation(Connection cxn) throws SQLException {
+		String tableName = "REQUESTS";
+		String stmtStr = String.format("UPDATE %s SET ontology_term=?, search_text=?, "+
+				"context=?, provenance=?, user_id=?, date_submitted=?, response_code=?, " +
+				"ontology_id=? where request_id=?", tableName); 
+		PreparedStatement ps = cxn.prepareStatement(stmtStr, Statement.RETURN_GENERATED_KEYS);
+		Preparation prep = new Preparation(ps, Request.class, 
+				"ontology_term", 
+				"search_text", 
+				"context", 
+				"provenance", 
+				"user_id", 
+				"date_submitted", 
+				"response_code", 
+				"ontology_id", 
+				"request_id");
+		prep.addClob(2);
+		return prep;
+	}
+
 	public Request() { 
 		super();
 	}
