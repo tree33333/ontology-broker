@@ -1,5 +1,25 @@
 
 Broker = function() { 
+
+	var get_params = function(uri) {
+		var paramIndex = uri.indexOf('?');
+		var dict = {};
+		if(paramIndex !== -1) { 
+			var paramArray = uri.slice(paramIndex + 1, uri.length).split('&');
+			var i; 
+			for(i = 0; i < paramArray.length; i++) { 
+				var pair = paramArray[i].split('=', 2);
+				var key = decodeURI(pair[0]);
+				if(pair.length > 1) { 
+					var value = decodeURI(pair[1]);
+					dict[key] = value;
+				} else { 
+					dict[key] = true;
+				}
+			}
+		}
+		return dict;
+	};
 	
 	var find_username = function(user_id, callback) { 
 		$.postJSON('/user/' + user_id + '/',
@@ -34,7 +54,8 @@ Broker = function() {
 		debug: debug,
         create_request: create_request,
         list_requests: list_requests,
-		date_string: date_string
+		date_string: date_string,
+		get_params: get_params
 
     };
 }();
