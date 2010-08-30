@@ -8,6 +8,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.sql.Clob;
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -258,8 +259,7 @@ public abstract class DBObject {
 				try {
 					Object value = f.get(this);
 					if(value != null) { 
-						json.key(name);
-						json.value(value);
+						json.key(name).value(value);
 					}
 					
 				} catch (IllegalAccessException e) {
