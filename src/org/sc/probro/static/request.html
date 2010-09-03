@@ -15,6 +15,8 @@ $(document).ready(function() {
 		var uri = window.location.href;
 		return Broker.get_params(uri);
 	};
+
+	$('#editanchor').attr('href', window.location.href + '&edit=true');
 	
 	var params = get_params();
 
@@ -23,7 +25,7 @@ $(document).ready(function() {
 			window.location = '/requestform.html?request_id=' + params['request'];
 		} else { 
 			var reqURI = '/request/' + params['request'] + '/?format=html';
-			Broker.debug(reqURI);
+			//Broker.debug(reqURI);
 			$.get(reqURI,
 				function(requesthtml) { 
 					$('#mainbody').append(requesthtml);	
@@ -49,10 +51,11 @@ body {
 <body>
 
 <div id="mainbody">
-<h3>Request</h3>
+<h3>Request (<a id="editanchor">edit</a>)</h3>
 </div>
 
-<div id="links">
+<div id="links" style="border: 1px solid black;">
+	<a href="/">All Requests</a><br/>
 	<a href="/query.html">Term Query</a><br/>
 	<a href="/requestform.html">New Term Request</a><br/>
 	<a href="/bulk-requests">Bulk Request List</a><br/>
