@@ -10,3 +10,6 @@ dbPath=FILLMEIN
 
 ## Path to the Lucene Index file
 luceneIndex=FILLMEIN
+
+## URL for the OBO Sparql Endpoint
+obo_sparql=http://sparql.obo.neurocommons.org/sparql
