@@ -14,6 +14,7 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.document.NumericField;
 import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
@@ -27,6 +28,7 @@ import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.Version;
+import org.eclipse.jetty.util.log.Log;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -36,13 +38,14 @@ public class ProteinSearcher {
 	private Analyzer analyzer;
 	private IndexReader reader;
 	private IndexSearcher search;
+	private Directory dir;
 	
 	public ProteinSearcher(File indexFile) throws IOException { 
 		//analyzer = new StandardAnalyzer(Version.LUCENE_CURRENT);
 		//analyzer = new WhitespaceAnalyzer();
 		analyzer = new BioAnalyzer();
 
-		Directory dir = FSDirectory.open(indexFile);
+		dir = FSDirectory.open(indexFile);
 		reader = IndexReader.open(dir, true);
 		search = new IndexSearcher(reader);
 		System.out.println(String.format("Opened: %s \n\t(# docs: %d)", dir.toString(), reader.numDocs()));
@@ -93,8 +96,16 @@ public class ProteinSearcher {
 		return obj;
 	}
 	
-	public void close() throws IOException { 
+	public void close() throws IOException {
+		Log.info("Closing ProteinSearcher...");
 		search.close();
+		reader.close();
+		dir.close();
+		
+		search = null;
+		reader = null;
+		dir = null;
+		//IndexWriter.unlock(dir);
 	}
 
 	public Query createTermQuery(String term) { 
