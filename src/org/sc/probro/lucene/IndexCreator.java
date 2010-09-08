@@ -55,7 +55,7 @@ public class IndexCreator {
 		dir = FSDirectory.open(indexFile);
 		
 		//IndexWriter.unlock(dir);		
-		Log.info(String.format("Creating Lucene Writer: %s", indexFile.toString()));
+		Log.info(String.format("Creating IndexWriter in IndexCreator: %s", indexFile.toString()));
 		writer = new IndexWriter(dir, analyzer, IndexWriter.MaxFieldLength.LIMITED);
 		
 		//reader = IndexReader.open(dir, true);
