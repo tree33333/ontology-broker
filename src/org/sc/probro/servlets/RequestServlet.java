@@ -20,6 +20,7 @@ import org.sc.probro.BrokerProperties;
 import org.sc.probro.data.DBObject;
 import org.sc.probro.data.Metadata;
 import org.sc.probro.data.Request;
+import org.sc.probro.data.StatusUpdate;
 
 import java.sql.*;
 import java.util.regex.*;
@@ -141,34 +142,62 @@ public class RequestServlet extends SkeletonDBServlet {
 			throw new BrokerException(e);
 		}
 	}
+	
+	private Collection<StatusUpdate> loadStatusUpdates(Connection cxn, Request req) throws BrokerException { 
+		LinkedList<StatusUpdate> updateList = new LinkedList<StatusUpdate>();
 
-	private Collection<Metadata> loadMetadata(Request req) throws BrokerException { 
+		if(req==null) { throw new BrokerException(HttpServletResponse.SC_BAD_REQUEST, "Request object is null."); }
+
+		try {
+			Statement stmt = cxn.createStatement();
+			
+			StatusUpdate update = new StatusUpdate();
+			update.request_id = req.request_id;
+			
+			try {
+				String query = update.queryString();
+				ResultSet rs = stmt.executeQuery(query + " ORDER BY updated_on");
+				try {
+					while(rs.next()) { 
+						updateList.add(new StatusUpdate(rs));
+					}
+					
+				} finally { 
+					rs.close();
+				}
+				
+			} finally { 
+				stmt.close();
+			}
+		} catch(SQLException e) { 
+			throw new BrokerException(e);
+		}
+		
+		return updateList;
+	}
+
+	private Collection<Metadata> loadMetadata(Connection cxn, Request req) throws BrokerException { 
 		LinkedList<Metadata> metadataList = new LinkedList<Metadata>();
 
 		if(req != null) { 
 			try {
-				Connection cxn = dbSource.getConnection();
-				try { 
-					Statement stmt = cxn.createStatement();
-					try {
-						String query = String.format("select * from METADATAS where request_id=%d", req.request_id);
-						ResultSet rs = stmt.executeQuery(query);
-						try { 
-							while(rs.next()) { 
-								metadataList.add(new Metadata(rs));
-							}
-
-						} finally { 
-							rs.close();
+				Statement stmt = cxn.createStatement();
+				try {
+					String query = String.format("select * from METADATAS where request_id=%d", req.request_id);
+					ResultSet rs = stmt.executeQuery(query);
+					try { 
+						while(rs.next()) { 
+							metadataList.add(new Metadata(rs));
 						}
 
 					} finally { 
-						stmt.close();
+						rs.close();
 					}
 
 				} finally { 
-					cxn.close();
+					stmt.close();
 				}
+
 
 			} catch (SQLException e) {
 				throw new BrokerException(e);
@@ -178,35 +207,29 @@ public class RequestServlet extends SkeletonDBServlet {
 		return metadataList;
 	}
 
-	private Request loadRequest(int requestID, HttpServletResponse response) throws IOException { 
+	private Request loadRequest(Connection cxn, int requestID, HttpServletResponse response) throws IOException { 
 		try {
-			Connection cxn = dbSource.getConnection();
-			try { 
-				Statement stmt = cxn.createStatement();
-				try {
-					String query = String.format("select * from REQUESTS where request_id=%d", requestID);
-					ResultSet rs = stmt.executeQuery(query);
-					try { 
-						if(rs.next()) { 
-							return new Request(rs);
-						} else { 
-							String msg = String.format("Unknown Request: %d", requestID);
-							raiseException(response, HttpServletResponse.SC_BAD_REQUEST, msg);
-							return null;
-						}
-						
-					} finally { 
-						rs.close();
+			Statement stmt = cxn.createStatement();
+			try {
+				String query = String.format("select * from REQUESTS where request_id=%d", requestID);
+				ResultSet rs = stmt.executeQuery(query);
+				try { 
+					if(rs.next()) { 
+						return new Request(rs);
+					} else { 
+						String msg = String.format("Unknown Request: %d", requestID);
+						raiseException(response, HttpServletResponse.SC_BAD_REQUEST, msg);
+						return null;
 					}
-					
+
 				} finally { 
-					stmt.close();
+					rs.close();
 				}
-				
+
 			} finally { 
-				cxn.close();
+				stmt.close();
 			}
-		
+
 		} catch (SQLException e) {
 			raiseInternalError(response, e);
 			return null;
@@ -216,6 +239,7 @@ public class RequestServlet extends SkeletonDBServlet {
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
 		String responseType = "application/json";
+		Connection cxn = null;
 		
 		try { 
 
@@ -237,57 +261,88 @@ public class RequestServlet extends SkeletonDBServlet {
 			}
 			requestID = Integer.parseInt(m.group(1));
 
-			Request loaded = loadRequest(requestID, response);
-			Collection<Metadata> metadata = loadMetadata(loaded);
+			try { 
+				cxn = dbSource.getConnection();
+				Request loaded = loadRequest(cxn, requestID, response);
+				Collection<Metadata> metadata = loadMetadata(cxn, loaded);
+				Collection<StatusUpdate> updates = loadStatusUpdates(cxn, loaded);
+				
+				if(loaded != null) { 
+					if(responseType.equals("application/json")) {
+						StringWriter stringer = new StringWriter();
+						JSONWriter writer = new JSONWriter(stringer);
 
-			if(loaded != null) { 
-				if(responseType.equals("application/json")) {
-					StringWriter stringer = new StringWriter();
-					JSONWriter writer = new JSONWriter(stringer);
+						try {
+							writer.object();
 
-					try {
-						writer.object();
+							writer.key("request");
+							loaded.writeJSONObject(writer);
 
-						writer.key("request");
-						loaded.writeJSONObject(writer);
+							writer.key("metadata");
+							writer.array();
+							for(Metadata md : metadata) { 
+								md.writeJSONObject(writer);
+							}
+							writer.endArray();
+							
+							writer.key("updates");
+							writer.array();
+							for(StatusUpdate update : updates) { 
+								update.writeJSONObject(writer);
+							}
+							writer.endArray();
 
-						writer.key("metadata");
-						writer.array();
-						for(Metadata md : metadata) { 
-							md.writeJSONObject(writer);
+							writer.endObject();
+
+							response.setContentType(responseType);
+							response.setStatus(HttpServletResponse.SC_OK);
+							response.getWriter().println(stringer.toString());
+
+						} catch (JSONException e) {
+							raiseInternalError(response, e);
+							return;
 						}
-						writer.endArray();
-						writer.endObject();
+
+					} else if (responseType.equals("text/html")) { 
 
 						response.setContentType(responseType);
 						response.setStatus(HttpServletResponse.SC_OK);
-						response.getWriter().println(stringer.toString());
 
-					} catch (JSONException e) {
-						raiseInternalError(response, e);
-						return;
+						PrintWriter printer = response.getWriter();
+						printer.println(loaded.writeHTMLObject(false));
+
+						printer.println("<table>");
+						Metadata mdheader = new Metadata();
+						printer.println(mdheader.writeHTMLRowHeader());
+						for(Metadata md : metadata) { 
+							printer.println(md.writeHTMLObject(true));
+						}
+						printer.println("</table>");
+
+						printer.println("<table>");
+						StatusUpdate upheader = new StatusUpdate();
+						printer.println(upheader.writeHTMLRowHeader());
+						for(StatusUpdate up : updates) { 
+							printer.println(up.writeHTMLObject(true));
+						}
+						printer.println("</table>");
 					}
-
-				} else if (responseType.equals("text/html")) { 
-
-					response.setContentType(responseType);
-					response.setStatus(HttpServletResponse.SC_OK);
-
-					PrintWriter printer = response.getWriter();
-					printer.println(loaded.writeHTMLObject(false));
-					printer.println("<table>");
-					Metadata header = new Metadata();
-					printer.println(header.writeHTMLRowHeader());
-					for(Metadata md : metadata) { 
-						printer.println(md.writeHTMLObject(true));
-					}
-					printer.println("</table>");
 				}
+			} catch(SQLException e) { 
+				throw new BrokerException(e);
 			}
 
 		} catch(BrokerException e) { 
 			handleException(response, e);
 			return;
+		} finally { 
+			if(cxn != null) { 
+				try {
+					cxn.close();
+				} catch (SQLException e) {
+					handleException(response, new BrokerException(e));
+				}
+			}
 		}
 	}
 	
