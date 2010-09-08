@@ -90,7 +90,7 @@ public class BulkRequestServlet extends SkeletonDBServlet {
 
 		try { 
 			Request template = new Request();
-			template.response_code = Request.RESPONSE_PENDING;
+			template.status = Request.RESPONSE_PENDING;
 			Collection<Request> reqs = load(template, response);
 
 			response.setContentType("text");
@@ -186,7 +186,7 @@ public class BulkRequestServlet extends SkeletonDBServlet {
 						
 						// if everything is kosher, than get the updated status of the request,
 						// change, and save.
-						submittedReq.response_code = table.getNewStatus(i);
+						submittedReq.status = table.getNewStatus(i);
 						stmt.executeUpdate(submittedReq.saveString());
 					}
 				} finally { 

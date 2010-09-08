@@ -147,6 +147,9 @@ public class DBObjectListServlet<T extends DBObject> extends SkeletonDBServlet {
     	new TreeSet<String>(Arrays.asList(CONTENT_TYPE_HTML, CONTENT_TYPE_JSON));
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    	
+    	Log.info(String.format("DBObjectListServet<%s>.doGet()", 
+    			objectClass.getSimpleName()));
 
     	Map<String,String[]> params = decodedParams(request);
     	

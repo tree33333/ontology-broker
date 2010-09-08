@@ -161,12 +161,12 @@ public class OntologyListServlet extends DBObjectListServlet<Ontology> {
 								String.format("Ontology '%s' already exists", ontologyName));
 
 					} else { 
+						obj.name = ontologyName;
 						String insertString = obj.insertString();
 
 						addOntologyToIndex(ids, descs);
 						Log.info("Loaded into index.");
 
-						obj.name = ontologyName;
 
 						Log.info(insertString);
 

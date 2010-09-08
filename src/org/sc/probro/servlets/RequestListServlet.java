@@ -22,6 +22,7 @@ import org.apache.derby.jdbc.EmbeddedDataSource;
 import org.eclipse.jetty.util.log.Log;
 import org.json.JSONException;
 import org.json.JSONWriter;
+import org.sc.probro.BrokerException;
 import org.sc.probro.BrokerProperties;
 import org.sc.probro.data.*;
 import org.sc.probro.lucene.PROIndexer;
@@ -30,7 +31,6 @@ public class RequestListServlet extends SkeletonDBServlet {
 	
 	private String tableName;
 	private String luceneIndexPath;
-	private PROIndexer indexer;
 	
     public RequestListServlet(BrokerProperties ps) {
     	super(ps);
@@ -40,23 +40,10 @@ public class RequestListServlet extends SkeletonDBServlet {
     
     public void init() throws ServletException { 
     	super.init();
-    	if(indexer == null) { 
-    		try {
-				indexer = new PROIndexer(new File(luceneIndexPath));
-			} catch (IOException e) {
-				Log.warn(e);
-				throw new ServletException(e);
-			}
-    	}
     }
     
     public void destroy() { 
     	super.destroy();
-    	try {
-			indexer.close();
-		} catch (IOException e) {
-			e.printStackTrace(System.err);
-		}
     }
 
     /* 
@@ -151,9 +138,9 @@ public class RequestListServlet extends SkeletonDBServlet {
 			
 			obj.ontology_term = null;
 			
-			if(obj.response_code == null) {
-				obj.response_code = Request.RESPONSE_PENDING;
-				json.key("response_code").value(String.valueOf(obj.response_code));
+			if(obj.status == null) {
+				obj.status = Request.RESPONSE_PENDING;
+				json.key("response_code").value(String.valueOf(obj.status));
 			}
 			
 	        json.endObject();
@@ -164,6 +151,8 @@ public class RequestListServlet extends SkeletonDBServlet {
 	        // objects into the db as well.
 	        // 
 	        Connection cxn = dbSource.getConnection();
+	        cxn.setAutoCommit(false);
+	        
 	        Statement stmt = cxn.createStatement();
 	        
 	        Preparation prep = obj.savePreparation(cxn);
@@ -178,9 +167,13 @@ public class RequestListServlet extends SkeletonDBServlet {
 	        
 	        generated.close();
 	        
+	        Date time = Calendar.getInstance().getTime();
+	        
 	        // Insert the associated metadata items.
 	        for(Metadata m : metadatas) { 
 	        	m.request_id = obj.request_id;
+	        	m.created_by = obj.user_id;
+	        	m.created_on = time;
 	        	
 	        	if(stmt.executeUpdate(m.insertString()) > 0) { 
 	        		String msg = String.format("Inserted Metadata: %s", m.toString());
@@ -192,18 +185,30 @@ public class RequestListServlet extends SkeletonDBServlet {
 	        	}
 	        }
 	        
+	        PROIndexer indexer = new PROIndexer(new File(luceneIndexPath));
+	        try { 
+	        	// Add the request to the Lucene index, so that it will satisfy future queries.
+	        	indexer.addQuery(obj, metadatas);
+	        } catch(IOException e) { 
+	        	throw new BrokerException(e);
+	        } finally { 
+	        	indexer.close();
+	        }
+	        
+	        cxn.commit();
+
 	        prep.close();
 	        stmt.close();
 	        cxn.close();
-	        
-	        // Add the request to the Lucene index, so that it will satisfy future queries.
-	        indexer.addQuery(obj, metadatas);
 
 	        response.sendRedirect("/");
 	        
         } catch (JSONException e) {
         	raiseInternalError(response, e);
 			return;
+        } catch(BrokerException e) { 
+        	handleException(response, e);
+        	return;
 
         } catch (SQLException e) {
         	raiseInternalError(response, e);

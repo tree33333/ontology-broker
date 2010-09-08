@@ -17,6 +17,16 @@ public class Preparation {
 		clobs = new TreeSet<Integer>();
 	}
 	
+	public static String[] splitArgList(String argList) { 
+		String[] array = argList.split(",");
+		for(int i = 0; i < array.length; i++) { array[i] = array[i].trim(); }
+		return array;
+	}
+	
+	public Preparation(PreparedStatement ps, String argList, Class<? extends DBObject> cls) { 
+		this(ps, cls, splitArgList(argList));
+	}
+	
 	public Preparation(PreparedStatement ps, Class<? extends DBObject> cls, String... fieldNames) { 
 		stmt = ps;
 		clobs = new TreeSet<Integer>();

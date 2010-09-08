@@ -25,13 +25,13 @@ public class Request extends DBObject {
 	public String provenance;
 	public Integer user_id; 
 	public String date_submitted;
-	public Integer response_code;
+	public Integer status;
 	public Integer ontology_id;
 
 	public Preparation savePreparation(Connection cxn) throws SQLException {
 		String tableName = "REQUESTS";
 		String stmtStr = String.format("INSERT INTO %s (ontology_term, search_text, "+
-				"context, provenance, user_id, date_submitted, response_code, ontology_id) values " + 
+				"context, provenance, user_id, date_submitted, status, ontology_id) values " + 
 				"(?, ?, ?, ?, ?, ?, ?, ?)", tableName);
 		PreparedStatement ps = cxn.prepareStatement(stmtStr, Statement.RETURN_GENERATED_KEYS);
 		Preparation prep = new Preparation(ps, Request.class, 
@@ -41,7 +41,7 @@ public class Request extends DBObject {
 				"provenance", 
 				"user_id", 
 				"date_submitted", 
-				"response_code", 
+				"status", 
 				"ontology_id");
 		prep.addClob(2);
 		return prep;
@@ -50,7 +50,7 @@ public class Request extends DBObject {
 	public Preparation updatePreparation(Connection cxn) throws SQLException {
 		String tableName = "REQUESTS";
 		String stmtStr = String.format("UPDATE %s SET ontology_term=?, search_text=?, "+
-				"context=?, provenance=?, user_id=?, date_submitted=?, response_code=?, " +
+				"context=?, provenance=?, user_id=?, date_submitted=?, status=?, " +
 				"ontology_id=? where request_id=?", tableName); 
 		PreparedStatement ps = cxn.prepareStatement(stmtStr, Statement.RETURN_GENERATED_KEYS);
 		Preparation prep = new Preparation(ps, Request.class, 
@@ -60,7 +60,7 @@ public class Request extends DBObject {
 				"provenance", 
 				"user_id", 
 				"date_submitted", 
-				"response_code", 
+				"status", 
 				"ontology_id", 
 				"request_id");
 		prep.addClob(2);
@@ -87,10 +87,10 @@ public class Request extends DBObject {
 	
 	public int hashCode() { return request_id.hashCode(); }
 	
-	public boolean isRedundant() { return response_code.equals(RESPONSE_REDUNDANT); }
-	public boolean isFulfilled() { return response_code.equals(RESPONSE_FULFILLED); }
-	public boolean isPending() { return response_code.equals(RESPONSE_PENDING); }
-	public boolean isIncomplete() { return response_code.equals(RESPONSE_INCOMPLETE); }
+	public boolean isRedundant() { return status.equals(RESPONSE_REDUNDANT); }
+	public boolean isFulfilled() { return status.equals(RESPONSE_FULFILLED); }
+	public boolean isPending() { return status.equals(RESPONSE_PENDING); }
+	public boolean isIncomplete() { return status.equals(RESPONSE_INCOMPLETE); }
 	
 	public void save(Statement stmt) throws SQLException { 
 		String saveString = saveString();

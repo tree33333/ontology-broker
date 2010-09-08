@@ -1,5 +1,7 @@
 package org.sc.probro.data;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.io.IOException;
 import java.io.Reader;
@@ -25,6 +27,10 @@ public abstract class DBObject {
 			return "NULL";
 		} else if(v instanceof String) { 
 			return String.format("'%s'", v.toString().replace(";", "\\;").replace("'", "\\'"));
+		} else if(v instanceof java.util.Date) { 
+			Date d = (Date)v;
+			DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+			return String.format("'%s'", df.format(d));
 		} else { 
 			return v.toString();
 		}
