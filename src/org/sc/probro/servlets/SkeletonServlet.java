@@ -43,6 +43,14 @@ public abstract class SkeletonServlet extends HttpServlet {
 	public static final String CONTENT_TYPE_JSON = "application/json";
 	public static final String CONTENT_TYPE_HTML = "text/html";
 	
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException { 
+		handleException(response, new BrokerException(HttpServletResponse.SC_FORBIDDEN, "Illegal operation."));
+	}
+	
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException { 
+		handleException(response, new BrokerException(HttpServletResponse.SC_FORBIDDEN, "Illegal operation."));
+	}
+	
 	public void handleException(HttpServletResponse response, BrokerException e) throws IOException {
 		if(e.isFromThrowable()) { 
 			Log.warn(e.getThrowable());
