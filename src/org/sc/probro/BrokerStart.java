@@ -7,6 +7,7 @@ import java.util.regex.Pattern;
 
 import javax.servlet.Servlet;
 
+import org.apache.commons.fileupload.servlet.FileCleanerCleanup;
 import org.apache.jasper.servlet.JspServlet;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.NCSARequestLog;
@@ -52,9 +53,16 @@ public class BrokerStart {
 		js.addServlet("BulkRequests", new BulkRequestServlet(props), "/bulk-requests");
 		js.addServlet("Requests", new RequestListServlet(props), "/requests");
 		js.addServlet("Users", new DBObjectListServlet<User>(props, User.class), "/users");
-		js.addServlet("Ontologies", new DBObjectListServlet<Ontology>(props, Ontology.class), "/ontologies");
-		js.addServlet("Metadata", new DBObjectListServlet<Metadata>(props, Metadata.class), "/metadata");
+		//js.addServlet("Ontologies", new DBObjectListServlet<Ontology>(props, Ontology.class), "/ontologies");
+		js.addServlet("Ontologies", new OntologyListServlet(props), "/ontologies");
 		js.addServlet("TextQuery", new TextQueryServlet(props), "/query");
+		js.addServlet("States", new RequestStateServlet(), "/states");
+		js.addServlet("Proteins", new BiothesaurusQueryServlet(props), "/proteins/*");
+
+		//js.addServlet("Metadatas", new DBObjectListServlet<Metadata>(props, Metadata.class), "/metadata");
+		//js.addServlet("Metadata", new DBObjectServlet<Metadata>(props, Metadata.class, "metadata_id"), "/metadatum/*");
+
+		//js.addServlet("IndexCreator", new IndexCreatorServlet(props), "/indexer/*");
 		
 		Runtime.getRuntime().addShutdownHook(new Thread(new ShutdownRunnable(js)));
 		js.start();
@@ -86,6 +94,13 @@ public class BrokerStart {
         context.setContextPath("/");
         context.setResourceBase(resourceBase);
         context.setInitParams(params);
+        
+        // This is the reaper thread for the Apache FileUpload utility, which cleans out 
+        // the temporary files which have been uploaded.
+        // See 
+        // http://commons.apache.org/fileupload/using.html
+        // for more details.
+        context.addEventListener(new FileCleanerCleanup());
         
         ResourceHandler recs = new ResourceHandler();
         recs.setResourceBase(resourceBase + "/static");
