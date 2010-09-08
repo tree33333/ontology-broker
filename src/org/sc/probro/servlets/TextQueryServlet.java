@@ -24,32 +24,17 @@ import org.sc.probro.lucene.ProteinSearcher;
 public class TextQueryServlet extends SkeletonServlet {
 	
 	private String luceneIndexPath;
-	private ProteinSearcher searcher;
 	
 	public TextQueryServlet(BrokerProperties props) { 
-		searcher = null;
 		luceneIndexPath = props.getLuceneIndex();
 	}
 	
 	public void init() throws ServletException { 
-		if(searcher == null) { 
-			try {
-				searcher = new ProteinSearcher(new File(luceneIndexPath));
-			} catch (IOException e) {
-				throw new ServletException(e);
-			}
-		}
+		super.init();
 	}
 	
 	public void destroy() {
-		if(searcher != null) {
-			System.out.println("Shutting down Lucene index...");
-			try {
-				searcher.close();
-			} catch (IOException e) {
-				e.printStackTrace(System.err);
-			}
-		}
+		super.destroy();
 	}
 
 	private String renderHitAsHTML(JSONObject obj) throws BrokerException { 
@@ -108,7 +93,8 @@ public class TextQueryServlet extends SkeletonServlet {
 				throw new BrokerException(HttpServletResponse.SC_BAD_REQUEST, 
 						String.format("Unsupported content type: %s", contentType));
 			}
-
+			
+			ProteinSearcher searcher = new ProteinSearcher(new File(luceneIndexPath));
 			try { 
 
 				JSONArray hits = searcher.evaluate(query);
@@ -137,6 +123,8 @@ public class TextQueryServlet extends SkeletonServlet {
 
 			} catch(JSONException e) { 
 				throw new BrokerException(e);
+			} finally { 
+				searcher.close();
 			}
 
 		} catch (BrokerException e) {
