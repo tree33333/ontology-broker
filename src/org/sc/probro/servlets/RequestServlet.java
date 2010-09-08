@@ -380,7 +380,9 @@ public class RequestServlet extends SkeletonDBServlet {
 					if(metadataMatcher.matches()) {
 						String keyName = metadataMatcher.group(1);
 						for(int i =0; i < parray.length; i++) { 
-							metadataPairs.add(new String[] { keyName, parray[i] });
+							if(parray[i].length() > 0) { 
+								metadataPairs.add(new String[] { keyName, parray[i] });
+							}
 						}
 					} else if (paramName.equals(OLD_STATUS_KEY)) {
 						oldStatus = Integer.parseInt(parray[0]);
@@ -441,7 +443,8 @@ public class RequestServlet extends SkeletonDBServlet {
 
 				if(updateRequest(cxn, req) && 
 					updateMetadata(cxn, req, metadataPairs) && 
-					createStatusChange(cxn, req, updater, oldStatus, newStatus, comment)) {
+					(oldStatus==newStatus || 
+						createStatusChange(cxn, req, updater, oldStatus, newStatus, comment))) {
 					
 					cxn.commit();
 					cxn.setAutoCommit(true);
