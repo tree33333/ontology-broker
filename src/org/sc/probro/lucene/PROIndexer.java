@@ -26,6 +26,7 @@ import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
+import org.eclipse.jetty.util.log.Log;
 import org.sc.probro.data.Metadata;
 import org.sc.probro.data.Request;
 
@@ -42,6 +43,7 @@ public class PROIndexer {
 		analyzer = new BioAnalyzer();
 
 		Directory dir = FSDirectory.open(indexFile);
+		Log.info("Creating IndexWriter in PROIndexer...");
 		writer = new IndexWriter(dir, analyzer, IndexWriter.MaxFieldLength.LIMITED);
 		reader = IndexReader.open(dir, true);
 		searcher = new IndexSearcher(reader);
