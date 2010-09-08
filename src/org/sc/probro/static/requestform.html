@@ -28,7 +28,7 @@ $(document).ready(function() {
 				$('#requestform [name="response_code"]').attr('value', request.response_code);
 				$('#requestform #requiredfields').append(
 					'<tr><td>Modify Status:</td><td><input type="text" style="width: 100%;" ' + 
-					'name="new_response_code" value="' + request.response_code +
+					'name="new_status" value="' + request['status'] +
 					'" /> </td></tr>');
 				$('#requiredfieldset').append('<input type="hidden" name="request_id" value="' + request.request_id + '" />');
 
@@ -97,7 +97,7 @@ body {
 		</table>
 		<input type="hidden" name="ontology_id" value="1" />
 		<input type="hidden" name="user_id" value="1" />
-		<input type="hidden" name="response_code" value="2" />
+		<input type="hidden" name="old_status" value="2" />
 		</fieldset>
 	</td>
 
