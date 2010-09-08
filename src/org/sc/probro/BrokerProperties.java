@@ -1,6 +1,8 @@
 package org.sc.probro;
 
 import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.Map;
@@ -38,4 +40,21 @@ public class BrokerProperties {
 	public String getDBPath() { return getStringValue("dbPath"); }
 	
 	public String getLuceneIndex() { return getStringValue("luceneIndex"); }
+	
+	public File getProteinIndexDir() { 
+		return new File(getStringValue("biothesaurusIndex"));
+	}
+	
+	public File getUniprotMappingFile() {
+		return new File(getStringValue("uniprotMapping"));
+	}
+	
+	public URL getOBOSparqlURL() { 
+		try {
+			return new URL(getStringValue("obo_sparql"));
+		} catch (MalformedURLException e) {
+			throw new IllegalArgumentException(getStringValue("obo_sparql"), e);
+		} 
+	}
+	
 }

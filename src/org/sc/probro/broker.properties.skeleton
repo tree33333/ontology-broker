@@ -8,8 +8,12 @@ port=8080
 ## relative path to Derby DB file.
 dbPath=FILLMEIN
 
-## Path to the Lucene Index file
+## Paths to the Lucene Index files
 luceneIndex=FILLMEIN
+biothesaurusIndex=FILLMEIN
+
+## Paths to other data resources
+uniprotMapping=FILLMEIN
 
 ## URL for the OBO Sparql Endpoint
 obo_sparql=http://sparql.obo.neurocommons.org/sparql
