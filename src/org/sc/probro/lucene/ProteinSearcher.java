@@ -46,6 +46,7 @@ public class ProteinSearcher {
 		analyzer = new BioAnalyzer();
 
 		dir = FSDirectory.open(indexFile);
+		Log.info("Creating IndexReader in ProteinSearcher...");
 		reader = IndexReader.open(dir, true);
 		search = new IndexSearcher(reader);
 		System.out.println(String.format("Opened: %s \n\t(# docs: %d)", dir.toString(), reader.numDocs()));
