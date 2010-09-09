@@ -216,90 +216,95 @@ public class RequestListServlet extends SkeletonDBServlet {
 		}
     }
     
-    private static String TYPE_JSON = "application/json";
-    private static String TYPE_HTML = "text/html";
-
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
-    	String contentType = TYPE_JSON;
-    	String type = request.getParameter("format");
-    	if(type != null && URLDecoder.decode(type, "UTF-8").toLowerCase().equals("html")) { 
-    		contentType = TYPE_HTML;
-    	}
+    	try { 
+			Map<String,String[]> params = decodedParams(request);
 
-        StringWriter stringer = new StringWriter();
-        JSONWriter json = new JSONWriter(stringer);
+			Request obj = new Request();
+			obj.setFromParameters(params);
 
-        try {
-        	Connection cxn = dbSource.getConnection();
-        	Statement stmt = cxn.createStatement();
-        	
-        	Request obj = new Request();
-        	
-        	Enumeration paramNames = request.getParameterNames();
-        	StringBuilder restriction = new StringBuilder();
-        	while(paramNames.hasMoreElements()) { 
-        		String paramName = (String)paramNames.nextElement();
-        		try {
-					Field paramField = Request.class.getField(paramName);
-					int mod = paramField.getModifiers();
-					if(paramField != null && Modifier.isPublic(mod) && !Modifier.isStatic(mod)) { 
-						String value = URLDecoder.decode(request.getParameter(paramName), "UTF-8");
-						obj.setFromString(paramName, value);
+			String format = params.containsKey("format") ? params.get("format")[0] : "json";
+			String contentType = contentTypeFromFormat(format, "html", "json");
+
+			StringWriter stringer = new StringWriter();
+			JSONWriter json = new JSONWriter(stringer);
+
+			try {
+				Connection cxn = dbSource.getConnection();
+				try { // ends with cxn.close() 
+					Statement stmt = cxn.createStatement();
+					try {  // ends with stmt.close()
+
+						if(obj.ontology_id != null) { 
+							Ontology ontology = new Ontology();
+							ontology.ontology_id = obj.ontology_id;
+							if(!ontology.checkExists(cxn)) { 
+								throw new BrokerException(HttpServletResponse.SC_BAD_REQUEST,
+										String.format("Unknown Ontology %d", obj.ontology_id));
+							}
+						}
+
+						String query = obj.queryString();						
+						Log.debug(String.format("query: %s", query));
+
+						ResultSet rs = stmt.executeQuery(query);
+						try {  // ends with rs.close()
+							if(format.equals("json")) { 
+								json.array();
+
+							} else if(format.equals("html")) {
+
+								stringer.write("<table>\n");
+								stringer.write(obj.writeHTMLRowHeader());
+								stringer.write("\n");
+							}
+
+							while(rs.next()) {
+								//T res = resultConstructor.newInstance(rs);
+								Request res = new Request(rs);
+
+								if(format.equals("json")) { 
+									res.writeJSONObject(json);
+
+								} else if (format.equals("html")) { 
+									stringer.write(res.writeHTMLObject(true));
+									stringer.write("\n");
+								}
+							}
+
+							if(format.equals("json")) { 
+								json.endArray();
+
+							} else if(format.equals("html")) { 
+								stringer.write("</table>");
+							}
+
+				
+						} finally { 
+							rs.close();
+						}
+					} finally { 
+						stmt.close();
 					}
-
-        		} catch (NoSuchFieldException e) {
-        			// do nothing.
+				} finally { 
+					cxn.close();
 				}
-        	}
 
-        	String query = obj.queryString();
-        	Log.debug(String.format("query: %s", query));
-        	ResultSet rs = stmt.executeQuery(query);
-        	
-        	if(contentType.equals(TYPE_JSON)) { 
-        		json.array();
-        	
-        	} else if(contentType.equals(TYPE_HTML)) { 
-        		stringer.write("<table>\n");
-        		stringer.write(obj.writeHTMLRowHeader());
-        		stringer.write("\n");
-        	}
-			
-			while(rs.next()) {
-				//T res = resultConstructor.newInstance(rs);
-				Request res = new Request(rs);
+    			response.setContentType(contentType);
+    			response.setStatus(HttpServletResponse.SC_OK);
+    			response.getWriter().println(stringer.toString());
 
-				if(contentType.equals(TYPE_JSON)) { 
-					res.writeJSONObject(json);
-				
-				} else if (contentType.equals(TYPE_HTML)) { 
-					stringer.write(res.writeHTMLObject(true));
-	        		stringer.write("\n");
-				}
-			}
-				
-        	if(contentType.equals(TYPE_JSON)) { 
-        		json.endArray();
-        	
-        	} else if(contentType.equals(TYPE_HTML)) { 
-        		stringer.write("</table>");
-        	}
-			
-			rs.close();
-			stmt.close();
-			cxn.close();
+    		} catch (JSONException e) {
+    			throw new BrokerException(e);
+    		} catch (SQLException e) {
+    			throw new BrokerException(e);
+    		}
 
-	    	response.setContentType(contentType);
-	        response.setStatus(HttpServletResponse.SC_OK);
-	        response.getWriter().println(stringer.toString());
-
-        } catch (JSONException e) {
-        	raiseInternalError(response, e);
-			return;
-		} catch (SQLException e) {
-        	raiseInternalError(response, e);
-			return;
-		}
+    	} catch(BrokerException e) { 
+    		handleException(response, e);
+    		return;
+    	}
     }
 }
+
