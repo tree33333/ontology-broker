@@ -12,6 +12,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.eclipse.jetty.util.log.Log;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONWriter;
@@ -34,6 +35,14 @@ public class RequestServlet extends SkeletonDBServlet {
 
 	private boolean createStatusChange(Connection cxn, Request req, 
 			int updater_id, int oldStatus, int newStatus, String comment) throws BrokerException {
+		
+		if(req == null) { 
+			throw new BrokerException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Null request");
+		}
+		
+		if(req.status == null) { 
+			throw new BrokerException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Null request.status");			
+		}
 		
 		if(!req.status.equals(oldStatus)) { 
 			throw new BrokerException(HttpServletResponse.SC_BAD_REQUEST, 
@@ -61,6 +70,7 @@ public class RequestServlet extends SkeletonDBServlet {
 							String.format("Could not create STATUSUPDATES entry"));
 				}
 				
+				req.status = newStatus;
 				
 			} finally { 
 				ps.close();
@@ -369,6 +379,13 @@ public class RequestServlet extends SkeletonDBServlet {
 		
 		try {
 			Map<String,String[]> params = decodedParams(request);
+
+			/*
+			for(String key : params.keySet()) { 
+				Log.info(String.format("%s=%s", key, Arrays.asList(params.get(key))));
+			}
+			*/
+			
 			JSONObject obj = new JSONObject();
 			
 			for(String paramName : params.keySet()) {
@@ -385,10 +402,12 @@ public class RequestServlet extends SkeletonDBServlet {
 							}
 						}
 					} else if (paramName.equals(OLD_STATUS_KEY)) {
+						Log.info(String.format("old_status=" + parray[0]));
 						oldStatus = Integer.parseInt(parray[0]);
-						obj.put("status", newStatus);
+						obj.put("status", oldStatus);
 
 					} else if (paramName.equals(NEW_STATUS_KEY)) { 
+						Log.info(String.format("new_status=" + parray[0]));
 						newStatus = Integer.parseInt(parray[0]);
 
 					} else { 
@@ -431,7 +450,34 @@ public class RequestServlet extends SkeletonDBServlet {
 				throw new BrokerException(HttpServletResponse.SC_BAD_REQUEST, "No 'user_id' supplied.");
 			}
 			
-			req.status = newStatus;
+			/**
+			 * This is the block where we check that the status change is *legal*
+			 * 
+			 */
+			if(oldStatus != newStatus) {
+				/*
+				String statusURL = String.format("/states?format=json&from=%d", oldStatus);
+				Log.info(String.format("Request: %s", statusURL));
+				JSONObject statusChanges = getLocalJSON(request, statusURL);
+				Log.info(statusChanges.toString());
+				JSONArray statusArray = statusChanges.getJSONArray("states");
+				Set<Integer> legal = new TreeSet<Integer>();
+				for(int i = 0; i < statusArray.length(); i++) { 
+					legal.add(statusArray.getInt(i));
+				}
+				*/
+				
+				Set<Integer> legal = RequestStateServlet.legalTransitions(oldStatus);
+				
+				if(!legal.contains(newStatus)) { 
+					throw new BrokerException(HttpServletResponse.SC_FORBIDDEN,
+							String.format("Illegal status change from %d (%s) to %d (%s)",
+									oldStatus, 
+									RequestStateServlet.STATES.backward(oldStatus),
+									newStatus,
+									RequestStateServlet.STATES.backward(newStatus)));
+				}
+			}
 
 			Connection cxn = dbSource.getConnection();
 			try { 
@@ -441,10 +487,10 @@ public class RequestServlet extends SkeletonDBServlet {
 				String comment = null;
 
 
-				if(updateRequest(cxn, req) && 
-					updateMetadata(cxn, req, metadataPairs) && 
-					(oldStatus==newStatus || 
-						createStatusChange(cxn, req, updater, oldStatus, newStatus, comment))) {
+				if(updateMetadata(cxn, req, metadataPairs) && 
+						(oldStatus==newStatus || 
+						createStatusChange(cxn, req, updater, oldStatus, newStatus, comment)) && 
+					updateRequest(cxn, req)) {
 					
 					cxn.commit();
 					cxn.setAutoCommit(true);
