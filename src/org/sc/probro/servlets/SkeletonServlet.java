@@ -1,16 +1,19 @@
 package org.sc.probro.servlets;
 
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -19,6 +22,8 @@ import java.sql.Statement;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -42,6 +47,41 @@ public abstract class SkeletonServlet extends HttpServlet {
 	
 	public static final String CONTENT_TYPE_JSON = "application/json";
 	public static final String CONTENT_TYPE_HTML = "text/html";
+	
+	public String contentTypeFromFormat(String format, String... accept) throws BrokerException {
+		Set<String> acc = new TreeSet<String>();
+		for(String a : accept) { acc.add(a); }
+		
+		if(accept.length > 0 && !acc.contains(format)) { 
+			throw new BrokerException(HttpServletResponse.SC_BAD_REQUEST, String.format(
+					"Unacceptable format '%s'", format));
+		}
+		
+		if(format.equals("html")) { 
+			return CONTENT_TYPE_HTML;
+		} else if (format.equals("json")) { 
+			return CONTENT_TYPE_JSON;
+		} else if (format.equals("fieldset")) { 
+			return CONTENT_TYPE_HTML;
+		}
+		
+		throw new BrokerException(HttpServletResponse.SC_BAD_REQUEST, String.format(
+				"Unknown format '%s'", format));
+	}
+	
+	public JSONObject getLocalJSON(HttpServletRequest req, String path) throws ServletException, IOException, JSONException, BrokerException {		
+		RequestDispatcher dispatcher = getServletContext().getRequestDispatcher(path);
+		DummyServletResponse response = new DummyServletResponse();
+		dispatcher.include(req, response);
+
+		if(response.getStatus() != HttpServletResponse.SC_OK) { 
+			throw new BrokerException(response.getStatus(), response.getValue());
+		}
+		
+		String value = response.getValue();
+		Log.info(value);
+		return new JSONObject(value);
+	}
 	
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException { 
 		handleException(response, new BrokerException(HttpServletResponse.SC_FORBIDDEN, "Illegal operation."));
@@ -225,4 +265,195 @@ public abstract class SkeletonServlet extends HttpServlet {
 		}
 		return params;
 	}
+}
+
+class DummyServletResponse implements HttpServletResponse {
+
+	private Map<String,Set<String>> headers;
+	
+	private String encoding;
+	private String contentType;
+	private Locale locale;
+	private int status;
+	private StringWriter stringer;
+	private PrintWriter writer;
+	
+	public DummyServletResponse() { 
+		headers = new LinkedHashMap<String,Set<String>>();
+		status = 200;
+		stringer = new StringWriter();
+		writer = new PrintWriter(stringer);
+		encoding = "UTF-8";
+		contentType = "text/html";
+		locale = Locale.getDefault();
+	}
+	
+	private class StringOutputStream extends ServletOutputStream {
+		public void write(int b) throws IOException {
+			stringer.append((char)b);
+		} 
+	}
+	
+	public String getValue() { return stringer.toString(); }
+	
+	public int getStatus() { return status; }
+
+	public void addCookie(Cookie arg0) {
+		// do nothing.
+	}
+
+	public void addDateHeader(String key, long time) {
+		SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+		addHeader(key, format.format(new Date(time)));
+	}
+
+	public void addHeader(String key, String value) {
+		if(!(headers.containsKey(key))) { headers.put(key, new LinkedHashSet<String>()); }
+		headers.get(key).add(value);
+	}
+
+	public void addIntHeader(String key, int value) {
+		addHeader(key, String.valueOf(value));
+	}
+
+	public boolean containsHeader(String key) {
+		return headers.containsKey(key);
+	}
+
+	public String encodeRedirectURL(String url) {
+		try {
+			return URLEncoder.encode(url, "UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace(System.err);
+			return null;
+		}
+	}
+
+	public String encodeRedirectUrl(String url) {
+		try {
+			return URLEncoder.encode(url, "UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace(System.err);
+			return null;
+		}
+	}
+
+	public String encodeURL(String url) {
+		try {
+			return URLEncoder.encode(url, "UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace(System.err);
+			return null;
+		}
+	}
+
+	public String encodeUrl(String url) {
+		try {
+			return URLEncoder.encode(url, "UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace(System.err);
+			return null;
+		}
+	}
+
+	public void sendError(int status) throws IOException {
+		this.status = status;
+		writer.close();
+		writer = null;
+	}
+
+	public void sendError(int status, String msg) throws IOException {
+		writer.println(msg);
+		sendError(status);
+	}
+
+	public void sendRedirect(String url) throws IOException {
+		throw new RuntimeException();
+	}
+
+	public void setDateHeader(String key, long time) {
+		if(headers.containsKey(key)) { headers.get(key).clear(); }
+		addDateHeader(key, time);
+	}
+
+	public void setHeader(String key, String value) {
+		if(headers.containsKey(key)) { headers.get(key).clear(); }
+		addHeader(key, value);
+	}
+
+	public void setIntHeader(String key, int value) {
+		if(headers.containsKey(key)) { headers.get(key).clear(); }
+		addIntHeader(key, value);
+	}
+
+	public void setStatus(int status) {
+		this.status = status;
+	}
+
+	public void setStatus(int status, String msg) {
+		this.status = status;
+		writer.println(msg);
+	}
+
+	public void flushBuffer() throws IOException {
+		writer.flush();
+	}
+
+	public int getBufferSize() {
+		return 0;
+	}
+
+	public String getCharacterEncoding() {
+		return encoding;
+	}
+
+	public String getContentType() {
+		return contentType;
+	}
+
+	public Locale getLocale() {
+		return locale;
+	}
+
+	public ServletOutputStream getOutputStream() throws IOException {
+		return new StringOutputStream();
+	}
+
+	public PrintWriter getWriter() throws IOException {
+		return writer;
+	}
+
+	public boolean isCommitted() {
+		return writer == null;
+	}
+
+	public void reset() {
+		status = 200;
+		stringer = new StringWriter();
+		writer = new PrintWriter(stringer);
+	}
+
+	public void resetBuffer() {
+		// do nothing.
+	}
+
+	public void setBufferSize(int arg0) {
+		throw new UnsupportedOperationException();
+	}
+
+	public void setCharacterEncoding(String arg0) {
+		encoding = arg0;
+	}
+
+	public void setContentLength(int len) {
+		// do nothing.
+	}
+
+	public void setContentType(String arg0) {
+		contentType = arg0;
+	}
+
+	public void setLocale(Locale arg0) {
+		locale = arg0;
+	} 
 }
