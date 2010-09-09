@@ -22,6 +22,23 @@ import org.json.JSONWriter;
 
 public abstract class DBObject {
 	
+	public boolean checkExists(Connection cxn) throws SQLException { 
+		String countQuery = countString();
+		Statement stmt = cxn.createStatement();
+		try { 
+			ResultSet rs = stmt.executeQuery(countQuery);
+			try { 
+				rs.next();
+				int count = rs.getInt(1);
+				return count > 0;
+			} finally { 
+				rs.close();
+			}
+		} finally { 
+			stmt.close();
+		}
+	}
+	
 	public static String asSQL(Object v) {
 		if(v == null) { 
 			return "NULL";
@@ -124,6 +141,27 @@ public abstract class DBObject {
 				e.printStackTrace(System.err);
 			}
 		}		
+	}
+	
+	public Map<String,Field> getFieldMap() { 
+		Map<String,Field> map = new LinkedHashMap<String,Field>();
+		for(Field f : getClass().getFields()) { 
+			int mod = f.getModifiers();
+			if(!Modifier.isStatic(mod) && Modifier.isPublic(mod)) { 
+				map.put(f.getName(), f);
+			}
+		}
+		return map;
+	}
+	
+	public void setFromParameters(Map<String,String[]> params) {
+		Map<String,Field> fields = getFieldMap();
+		
+		for(String key : params.keySet()) { 
+			if(fields.containsKey(key) && params.get(key).length > 0) { 
+				setFromString(key, params.get(key)[0]);
+			}
+		}
 	}
 	
 	public void setFromString(String fieldName, String value) { 
@@ -484,6 +522,36 @@ public abstract class DBObject {
 		}
 		
 		return keyed;
+	}
+	
+	public String countString() { 
+		String tableName = getClass().getSimpleName().toUpperCase() + "S";
+		StringBuilder where = new StringBuilder();
+		
+		for(Field f : getClass().getFields()) { 
+			int mod = f.getModifiers();
+			if(Modifier.isPublic(mod) && !Modifier.isStatic(mod)) { 
+				try {
+					Object value = f.get(this);
+					if(value != null) { 
+						String name = f.getName();
+
+						if(where.length() > 0) { 
+							where.append(" AND ");
+						}
+
+						where.append(String.format("%s=%s", name, asSQL(value)));
+					}
+					
+				} catch (IllegalAccessException e) {
+					e.printStackTrace(System.err);
+				}
+			}
+		}
+		
+		String whereString = where.toString();
+		return String.format("SELECT count(*) FROM %s %s", tableName, 
+				(whereString.length() > 0 ? String.format("WHERE %s", whereString) : ""));		
 	}
 	
 	public String queryString() { 
