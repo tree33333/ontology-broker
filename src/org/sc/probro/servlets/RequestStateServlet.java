@@ -6,6 +6,10 @@ import java.io.*;
 import javax.servlet.*;
 import javax.servlet.http.*;
 
+import org.eclipse.jetty.util.log.Log;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.sc.probro.BrokerException;
 import org.sc.probro.Numbering;
 import org.sc.probro.Pairing;
@@ -60,28 +64,107 @@ public class RequestStateServlet extends SkeletonServlet {
 		MACHINE.addTransition("REDUNDANT", "JUDGE-REJECT", "PENDING");
 		MACHINE.addTransition("REDUNDANT", "JUDGE-ACCEPT", "ACCEPTED");		
 	}
+	
+	public static Set<Integer> legalTransitions(Integer fidx) {
+		String from = fidx != null ? STATES.backward(fidx) : null;
+		Set<Integer> legal = new TreeSet<Integer>();
+		for(Integer k = 0; k < MACHINE.size(); k++) { 
+			String to = STATES.backward(k);
+			if(from == null || MACHINE.isReachable(from, to)) { 
+				legal.add(k);
+			}
+		}
+		return legal;
+	}
 
-	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException { 
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		try {
+			
+			String format = getOptionalParam(request, "format", String.class);
+			if(format == null) { format = "html"; }
+			
+			Log.info(String.format("RequestStateServlet: format=%s", format));
+			
 			Integer fromIdx = getOptionalParam(request, "from", Integer.class);
 			String from = fromIdx != null ? STATES.backward(fromIdx) : null;
 			
-			response.setStatus(HttpServletResponse.SC_OK);
-			response.setContentType("text/html");
-			PrintWriter writer = response.getWriter();
+			Log.info(String.format("RequestStateServlet: from=%s", String.valueOf(from)));
 			
-			writer.println("<table>");
+			if(format.equals("html")) { 
 			
-			for(int i =0; i < STATES.size(); i++) {
-				String to = STATES.backward(i);
-				if(from == null || MACHINE.isReachable(from, to)) { 
-					writer.println(String.format("<tr><td>%d</td><td>%s</td></tr>", i, to));
+				response.setStatus(HttpServletResponse.SC_OK);				
+				response.setContentType("text/html");
+				PrintWriter writer = response.getWriter();
+				
+				writer.println("<table>");
+				
+				for(int i =0; i < STATES.size(); i++) {
+					String to = STATES.backward(i);
+					if(from == null || MACHINE.isReachable(from, to)) { 
+						writer.println(String.format("<tr><td>%d</td><td>%s</td></tr>", i, to));
+					}
 				}
+				
+				writer.println("</table>");
+				
+			} else if (format.equals("fieldset")) { 
+
+				response.setStatus(HttpServletResponse.SC_OK);				
+				response.setContentType("text/html");
+				PrintWriter writer = response.getWriter();
+				
+				writer.println("<fieldset><legend>New Status</legend>");
+				
+				for(int i =0; i < STATES.size(); i++) {
+					String to = STATES.backward(i);
+					if(from == null || MACHINE.isReachable(from, to)) { 
+						//writer.println(String.format("<tr><td>%d</td><td>%s</td></tr>", i, to));
+						String field = 
+							String.format("<input type=\"radio\" name=\"new_status\" value=\"%d\">%s</input>",
+									i, to);
+						writer.println(field);
+					}
+				}
+				
+				writer.println("</fieldset>");
+				
+			} else if(format.equals("json")) { 
+				
+				Log.info("RequestStateServlet: writing JSON response.");
+
+				response.setStatus(HttpServletResponse.SC_OK);				
+				response.setContentType("application/json");
+				
+				JSONObject top = new JSONObject();
+				JSONArray array = new JSONArray();
+				try {
+					
+					top.put("from", from);
+					top.put("states", array);
+
+					for(int i =0; i < STATES.size(); i++) {
+						String to = STATES.backward(i);
+
+						if(from == null || MACHINE.isReachable(from, to)) { 
+							array.put(i);
+						}
+					}
+				} catch(JSONException e) { 
+					throw new BrokerException(e);
+				}
+
+				PrintWriter writer = response.getWriter();
+				writer.println(top.toString());
+				
+				Log.info(String.format("RequestStateServlet: %s", top.toString()));
+
+			} else { 
+				throw new BrokerException(HttpServletResponse.SC_BAD_REQUEST, "Unknown 'format' value " + format);
 			}
 			
-			writer.println("</table>");
-			
 		} catch (BrokerException e) {
+			Log.warn(e);
+			Log.warn(String.format("RequestStateServlet.doGet() : %s", e.getMessage()));
 			handleException(response, e);
 		}		
 	}
