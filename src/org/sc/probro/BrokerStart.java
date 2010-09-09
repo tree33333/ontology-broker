@@ -58,6 +58,7 @@ public class BrokerStart {
 		js.addServlet("TextQuery", new TextQueryServlet(props), "/query");
 		js.addServlet("States", new RequestStateServlet(), "/states");
 		js.addServlet("Proteins", new BiothesaurusQueryServlet(props), "/proteins/*");
+		js.addServlet("Test", new TestServlet(), "/test/*");
 
 		//js.addServlet("Metadatas", new DBObjectListServlet<Metadata>(props, Metadata.class), "/metadata");
 		//js.addServlet("Metadata", new DBObjectServlet<Metadata>(props, Metadata.class, "metadata_id"), "/metadatum/*");
