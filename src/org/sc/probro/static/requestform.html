@@ -26,10 +26,7 @@ $(document).ready(function() {
 				$('#requestform [name="provenance"]').attr('value', request.provenance);		
 				$('#requestform [name="date_submitted"]').attr('value', request.date_submitted);		
 				$('#requestform [name="response_code"]').attr('value', request.response_code);
-				$('#requestform #requiredfields').append(
-					'<tr><td>Modify Status:</td><td><input type="text" style="width: 100%;" ' + 
-					'name="new_status" value="' + request['status'] +
-					'" /> </td></tr>');
+				//$('#requestform #requiredfields').append( '<tr><td>Modify Status:</td><td><input type="text" style="width: 100%;" ' + 'name="new_status" value="' + request['status'] + '" /> </td></tr>');
 				$('#requiredfieldset').append('<input type="hidden" name="request_id" value="' + request.request_id + '" />');
 
 				for(i = 0; i < metadata.length; i++) { 
@@ -52,6 +49,11 @@ $(document).ready(function() {
 				}
 
 				$('#requestform').removeAttr('action').attr('action', '/request/' + request_id + '/');
+
+				$.get('/states?format=fieldset&from=' + request['status'], 
+					function(statusform) { 
+						$('#tdoptional').append(statusform);
+					});
 			});
 	};
 
@@ -101,7 +103,7 @@ body {
 		</fieldset>
 	</td>
 
-	<td style="vertical-align: top;">
+	<td id="tdoptional" style="vertical-align: top;">
 		<fieldset>
 		<legend>Optional Metadata</legend>
 			<table>
@@ -110,15 +112,15 @@ body {
 				<tr><td>Modification:</td><td> <input type="text" name="metadata_modification" /></td></tr>
 				<tr><td>Organism:</td><td> <input type="text" name="metadata_organism" /></td></tr>
 			</table>
-		<fieldset>
-		<legend>PRO Type</legend>
-			<input type="radio" name="metadata_type" value="protein" checked="true">protein</input><br>
-			<input type="radio" name="metadata_type" value="exon"/>exon</input><br>
-			<input type="radio" name="metadata_type" value="site"/>site</input><br>
-			<input type="radio" name="metadata_type" value="modified_site"/>modified_site</input><br>
-			<input type="radio" name="metadata_type" value="variation_site"/>variation_site</input><br>
-			<input type="radio" name="metadata_type" value="cleavage_product"/>cleavage_product</input><br>
-		</fieldset>
+			<fieldset>
+			<legend>PRO Type</legend>
+				<input type="radio" name="metadata_type" value="protein" checked="true">protein</input><br>
+				<input type="radio" name="metadata_type" value="exon"/>exon</input><br>
+				<input type="radio" name="metadata_type" value="site"/>site</input><br>
+				<input type="radio" name="metadata_type" value="modified_site"/>modified_site</input><br>
+				<input type="radio" name="metadata_type" value="variation_site"/>variation_site</input><br>
+				<input type="radio" name="metadata_type" value="cleavage_product"/>cleavage_product</input><br>
+			</fieldset>
 		</fieldset>
 	</td>
 	<td style="vertical-align: top;">
