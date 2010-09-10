@@ -14,4 +14,7 @@ public class Numbering<S> extends Pairing<S,Integer> {
 	
 	public int number(S s) { return forward(s); }
 	public S value(int idx) { return backward(idx); }
+	
+	public boolean containsNumber(int idx) { return idx >= 0 && idx < size(); }
+	public boolean containsValue(S value) { return containsFirstValue(value); } 
 }

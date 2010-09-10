@@ -21,6 +21,9 @@ public class Pairing<S,T> {
 		}
 	}
 	
+	public boolean containsFirstValue(S v) { return sidx.containsKey(v); }
+	public boolean containsSecondValue(T v) { return tidx.containsKey(v); }
+	
 	public int size() { return s.length; }
 	public T forward(S s) { return t[sidx.get(s)]; }
 	public S backward(T t) { return s[tidx.get(t)]; }
