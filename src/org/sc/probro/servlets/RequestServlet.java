@@ -237,6 +237,10 @@ public class RequestServlet extends SkeletonDBServlet {
 					}
 					
 					Request newReq = new Request();
+					
+					newReq.setFromDBObject(dbReq);
+					newReq.request_id = null;
+					newReq.parent_request = dbReq.request_id;
 
 					/**
 					 * This block could probably be replaced with setFromJSON(), no? 
@@ -255,7 +259,7 @@ public class RequestServlet extends SkeletonDBServlet {
 							newReq.setFromString(key, String.valueOf(obj.get(key)));
 						}
 					}
-					
+										
 					String error = model.checkRequestChange(dbReq, newReq);
 					if(error != null) {
 						throw new BrokerException(HttpServletResponse.SC_BAD_REQUEST, error);

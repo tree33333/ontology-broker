@@ -36,16 +36,24 @@ public class BrokerModel {
 	}
 	
 	public synchronized String checkRequestChange(Request oldReq, Request newReq) {
-		
+
 		if(!oldReq.creator_id.equals(newReq.creator_id)) { 
 			return String.format("Illegal CREATOR_ID change (%d -> %d)", 
 					oldReq.creator_id, newReq.creator_id);
 		}
 		
+		assert oldReq != null : "null oldRequest";
+		assert newReq != null : "null newRequest";
+		assert oldReq.status != null : "Null oldRequest.status";
+		
+		if(newReq.status == null) { 
+			return String.format("Illegal new request status: null");
+		}
+		
 		String oldStatus = RequestStateServlet.STATES.backward(oldReq.status);
 		String newStatus = RequestStateServlet.STATES.backward(newReq.status);
 		
-		if(!RequestStateServlet.MACHINE.isReachable(oldStatus,newStatus)) { 
+		if(!oldStatus.equals(newStatus) && !RequestStateServlet.MACHINE.isReachable(oldStatus,newStatus)) { 
 			return String.format("Illegal Request STATUS transition: %s -> %s", oldStatus, newStatus);
 		}
 		
@@ -210,6 +218,7 @@ public class BrokerModel {
 			md.request_id = req.request_id;
 			md.created_on = req.date_submitted;
 			md.created_by = req.modified_by;
+			
 			model.create(Metadata.class, md);
 		}
 
@@ -233,6 +242,9 @@ public class BrokerModel {
 
 		for(Metadata md : metadatas) { 
 			md.request_id = req.request_id;
+			md.created_on = req.date_submitted;
+			md.created_by = req.modified_by;
+			
 			model.create(Metadata.class, md);
 		}
 
