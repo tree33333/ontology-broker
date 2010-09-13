@@ -24,6 +24,18 @@ import org.sc.probro.BrokerProperties;
 import org.sc.probro.lucene.BiothesaurusSearcher;
 import org.sc.probro.lucene.ProteinSearcher;
 
+/**
+ * Cleared for <tt>BrokerModel</tt> usage.
+ * 
+ * This servlet is relatively disconnected from the rest of the app -- no other servlets contain explicit
+ * dependencies on it, aside from BrokerStart.  
+ * 
+ * This is a simple interface to the Biothesaurus-based Protein index.  It is run under the url <tt>/proteins</tt>
+ * and is (normally) accessed either programmatically or from the query-proteins.html static HTML form.
+ * 
+ * @author tdanford
+ *
+ */
 public class BiothesaurusQueryServlet extends SkeletonServlet {
 	
 	private File biothesaurusIndex;

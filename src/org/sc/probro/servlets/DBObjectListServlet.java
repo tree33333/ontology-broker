@@ -25,11 +25,14 @@ import org.eclipse.jetty.util.log.Log;
 import org.json.JSONException;
 import org.json.JSONWriter;
 import org.sc.probro.BrokerProperties;
+import org.sc.probro.data.DBModelException;
 import org.sc.probro.data.DBObject;
+import org.sc.probro.data.DBObjectModel;
 import org.sc.probro.data.Request;
 
 /**
  * Converted to using the Jetty Logging system.
+ * Uses the DBObjectModel correctly.
  * 
  * @author tdanford
  *
@@ -104,16 +107,12 @@ public class DBObjectListServlet<T extends DBObject> extends SkeletonDBServlet {
 
 	        json.endObject();
 	        
-	        Connection cxn = dbSource.getConnection();
-	        Statement stmt = cxn.createStatement();
-	        String insertString = obj.insertString();
-	        
-	        //System.out.println(insertString);
-	        Log.debug(insertString);
-	        
-	        stmt.executeUpdate(insertString);
-	        stmt.close();
-	        cxn.close();
+	        DBObjectModel model = getDBObjectModel();
+	        try { 
+	        	model.update(obj);
+	        } finally { 
+	        	model.close();
+	        }
 
 	        Log.debug(stringer.toString());
 	        
@@ -122,10 +121,6 @@ public class DBObjectListServlet<T extends DBObject> extends SkeletonDBServlet {
 	        response.getWriter().println(stringer.toString());
 	        
         } catch (JSONException e) {
-			raiseInternalError(response, e);
-			return;
-
-        } catch (SQLException e) {
 			raiseInternalError(response, e);
 			return;
 
@@ -140,6 +135,10 @@ public class DBObjectListServlet<T extends DBObject> extends SkeletonDBServlet {
 		} catch (InvocationTargetException e) {
 			raiseInternalError(response, e);
 			return;
+			
+		} catch (DBModelException e) {			
+			raiseInternalError(response, e);
+			return;
 		}
     }
     
@@ -152,107 +151,99 @@ public class DBObjectListServlet<T extends DBObject> extends SkeletonDBServlet {
     			objectClass.getSimpleName()));
 
     	Map<String,String[]> params = decodedParams(request);
-    	
+
     	String contentType = decodeResponseType(params, CONTENT_TYPE_JSON);
     	if(contentType == null || !SUPPORTED_CONTENT_TYPES.contains(contentType)) { 
-			String msg = String.format("format %s not supported", params.get("format")[0]);
-			Log.warn(msg);
-			response.sendError(HttpServletResponse.SC_NOT_IMPLEMENTED, msg);
-			return;    		
+    		String msg = String.format("format %s not supported", params.get("format")[0]);
+    		Log.warn(msg);
+    		response.sendError(HttpServletResponse.SC_NOT_IMPLEMENTED, msg);
+    		return;    		
     	}
 
-        StringWriter stringer = new StringWriter();
-        JSONWriter json = new JSONWriter(stringer);
+    	StringWriter stringer = new StringWriter();
+    	JSONWriter json = new JSONWriter(stringer);
 
-        try {
-        	Connection cxn = dbSource.getConnection();
-        	Statement stmt = cxn.createStatement();
-        	
-        	T obj = blankConstructor.newInstance();
-        	
-        	Enumeration paramNames = request.getParameterNames();
-        	StringBuilder restriction = new StringBuilder();
-        	while(paramNames.hasMoreElements()) { 
-        		String paramName = (String)paramNames.nextElement();
-        		try {
-					Field paramField = objectClass.getField(paramName);
-					int mod = paramField.getModifiers();
-					if(paramField != null && Modifier.isPublic(mod) && !Modifier.isStatic(mod)) { 
-						String value = URLDecoder.decode(request.getParameter(paramName), "UTF-8");
-						obj.setFromString(paramName, value);
-					}
+    	try {
+    		T obj = blankConstructor.newInstance();
 
-        		} catch (NoSuchFieldException e) {
-        			// do nothing.
-        			//Log.debug(e);
-				}
-        	}
+    		Enumeration paramNames = request.getParameterNames();
+    		StringBuilder restriction = new StringBuilder();
+    		while(paramNames.hasMoreElements()) { 
+    			String paramName = (String)paramNames.nextElement();
+    			try {
+    				Field paramField = objectClass.getField(paramName);
+    				int mod = paramField.getModifiers();
+    				if(paramField != null && Modifier.isPublic(mod) && !Modifier.isStatic(mod)) { 
+    					String value = URLDecoder.decode(request.getParameter(paramName), "UTF-8");
+    					obj.setFromString(paramName, value);
+    				}
 
-        	String query = obj.queryString();
-        	
-        	//System.out.println(String.format("query: %s", query));
-        	Log.debug(String.format("query: %s", query));
-        	
-        	ResultSet rs = stmt.executeQuery(query);
-        	
-        	if(contentType.equals(CONTENT_TYPE_JSON)) { 
-        		if(keyField != null) {
-        			json.object();
-        		} else { 
-        			json.array();
-        		}
-        	
-        	} else if(contentType.equals(CONTENT_TYPE_HTML)) { 
-        		stringer.write("<table>\n");
-        		stringer.write(obj.writeHTMLRowHeader());
-        		stringer.write("\n");
-        	}
-			
-			while(rs.next()) {
-				T res = resultConstructor.newInstance(rs);
+    			} catch (NoSuchFieldException e) {
+    				// do nothing.
+    				//Log.debug(e);
+    			}
+    		}
 
-				if(contentType.equals(CONTENT_TYPE_JSON)) {
-					
-					if(keyField != null) {
-						String keyValue = String.valueOf(keyField.get(res));
-						json.key(keyValue);
-					}
-					
-					res.writeJSONObject(json);
-				
-				} else if (contentType.equals(CONTENT_TYPE_HTML)) { 
-					stringer.write(res.writeHTMLObject(true));
-	        		stringer.write("\n");
-				}
-			}
-				
-        	if(contentType.equals(CONTENT_TYPE_JSON)) { 
-        		if(keyField != null) {
-        			json.endObject();
-        		} else { 
-        			json.endArray();
-        		}
-        	
-        	} else if(contentType.equals(CONTENT_TYPE_HTML)) { 
-        		stringer.write("</table>");
-        	}
-			
-			rs.close();
-			stmt.close();
-			cxn.close();
+    		DBObjectModel model = getDBObjectModel();
+    		try { 
 
-	    	response.setContentType(contentType);
-	        response.setStatus(HttpServletResponse.SC_OK);
+    			if(contentType.equals(CONTENT_TYPE_JSON)) { 
+    				if(keyField != null) {
+    					json.object();
+    				} else { 
+    					json.array();
+    				}
 
-	        Log.debug(stringer.toString());
-	        response.getWriter().println(stringer.toString());
+    			} else if(contentType.equals(CONTENT_TYPE_HTML)) { 
+    				stringer.write("<table>\n");
+    				stringer.write(obj.writeHTMLRowHeader());
+    				stringer.write("\n");
+    			}
+
+    			for(DBObject res : model.load(objectClass, obj)) { 
+    				if(contentType.equals(CONTENT_TYPE_JSON)) {
+
+    					if(keyField != null) {
+    						String keyValue = String.valueOf(keyField.get(res));
+    						json.key(keyValue);
+    					}
+
+    					res.writeJSONObject(json);
+
+    				} else if (contentType.equals(CONTENT_TYPE_HTML)) { 
+    					stringer.write(res.writeHTMLObject(true));
+    					stringer.write("\n");
+    				}
+    			}
+
+    			if(contentType.equals(CONTENT_TYPE_JSON)) { 
+    				if(keyField != null) {
+    					json.endObject();
+    				} else { 
+    					json.endArray();
+    				}
+
+    			} else if(contentType.equals(CONTENT_TYPE_HTML)) { 
+    				stringer.write("</table>");
+    			}
+
+    		} finally { 
+    			model.close(); 
+    		}
+
+
+    		response.setContentType(contentType);
+    		response.setStatus(HttpServletResponse.SC_OK);
+
+    		Log.debug(stringer.toString());
+    		response.getWriter().println(stringer.toString());
 
         } catch (JSONException e) {
          	raiseInternalError(response, e);
          	return;
-		} catch (SQLException e) {
+		} catch (DBModelException e) {
          	raiseInternalError(response, e);
-			return;
+         	return;
 		} catch (InstantiationException e) {
          	raiseInternalError(response, e);
 			return;

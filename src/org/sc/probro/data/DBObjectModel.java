@@ -5,7 +5,11 @@ import java.util.Collection;
 public interface DBObjectModel {
 
 	public <T extends DBObject> 
-		Collection<T> load(Class<? extends T> cls, T template) 
+	Collection<T> load(Class<? extends T> cls, T template) 
+	throws DBModelException;
+
+	public <T extends DBObject> 
+		Collection<T> load(Class<? extends T> cls, T template, String order, Integer limit) 
 		throws DBModelException;
 	
 	public <T extends DBObject> 
@@ -21,7 +25,7 @@ public interface DBObjectModel {
 	public void commitTransaction() throws DBModelException;
 	public void rollbackTransaction() throws DBModelException;
 	
-	public <T extends DBObject> T create(Class<? extends T> cls, T obj) throws DBModelException;
+	public <T extends DBObject> void create(Class<? extends T> cls, T obj) throws DBModelException;
 	public void update(DBObject obj) throws DBModelException;
 	public void delete(DBObject obj) throws DBModelException;
 	

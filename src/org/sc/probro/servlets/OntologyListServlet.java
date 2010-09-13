@@ -24,7 +24,9 @@ import org.sc.obo.OBOStanza;
 import org.sc.obo.OBOValue;
 import org.sc.probro.BrokerException;
 import org.sc.probro.BrokerProperties;
+import org.sc.probro.data.DBModelException;
 import org.sc.probro.data.DBObject;
+import org.sc.probro.data.DBObjectModel;
 import org.sc.probro.data.Ontology;
 import org.sc.probro.lucene.IndexCreator;
 import org.sc.probro.sparql.*;
@@ -32,6 +34,11 @@ import org.sc.probro.sparql.*;
 import com.hp.hpl.jena.rdf.model.Literal;
 import com.hp.hpl.jena.rdf.model.RDFNode;
 
+/**
+ * Cleared for DBObjectModel usage.
+ * 
+ * @author tdanford
+ */
 public class OntologyListServlet extends DBObjectListServlet<Ontology> {
 	
 	private OBOSparql oboSparql;
@@ -110,8 +117,6 @@ public class OntologyListServlet extends DBObjectListServlet<Ontology> {
 							"String-valued 'name' field given in POSTed JSON");
 				}
 
-				Ontology obj = new Ontology();
-				
 				String ontologyURI = OBOSparql.createGraphURI(ontologyName);
 				
 				String query = String.format( 
@@ -150,44 +155,30 @@ public class OntologyListServlet extends DBObjectListServlet<Ontology> {
 				
 				Log.info(String.format("Loaded %d terms.", ids.size()));
 
-				Connection cxn = dbSource.getConnection();
-				Statement stmt = cxn.createStatement();
-
-				ResultSet rs = stmt.executeQuery(
-						String.format("select ontology_id from ontologys where name='%s'", ontologyName));
+				DBObjectModel model = getDBObjectModel();
 				try { 
-					if(rs.next()) {
+					Ontology template = new Ontology();
+					template.name = ontologyName;
+
+					if(model.count(Ontology.class, template) > 0) { 
 						throw new BrokerException(HttpServletResponse.SC_CONFLICT,
-								String.format("Ontology '%s' already exists", ontologyName));
-
+								String.format("Ontology '%s' already exists", ontologyName));					
 					} else { 
-						obj.name = ontologyName;
-						String insertString = obj.insertString();
-
 						addOntologyToIndex(ids, descs);
-						Log.info("Loaded into index.");
-
-
-						Log.info(insertString);
-
-						stmt.executeUpdate(insertString);
+						model.create(Ontology.class, template);
 
 						response.setStatus(HttpServletResponse.SC_OK);
 						response.sendRedirect("/ontologies");
 					}
 				} finally { 
-					rs.close();
-					stmt.close();
-					cxn.close();
+					model.close();
 				}
-
 
 			} catch (JSONException e) {
 				throw new BrokerException(e);
 
-			} catch (SQLException e) {
+			} catch (DBModelException e) {
 				throw new BrokerException(e);
-
 			}
 		} catch(BrokerException e) { 
 			handleException(response, e);

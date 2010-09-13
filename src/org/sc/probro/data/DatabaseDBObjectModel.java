@@ -27,6 +27,10 @@ public class DatabaseDBObjectModel implements DBObjectModel {
 			throw new DBModelException(e);
 		}
 	}
+	
+	public Connection getConnection() { 
+		return cxn;
+	}
 
 	public <T extends DBObject> int count(Class<? extends T> cls, T template) throws DBModelException {
 		try {
@@ -59,14 +63,22 @@ public class DatabaseDBObjectModel implements DBObjectModel {
 	}
 
 	public <T extends DBObject> Collection<T> load(Class<? extends T> cls, T template)
-			throws DBModelException {
+	throws DBModelException {
+		return load(cls, template, null, null);
+	}
+	
+	public <T extends DBObject> Collection<T> load(Class<? extends T> cls, T template, String order, Integer limit)
+		throws DBModelException {
 		try {
 			String tableName = cls.getSimpleName().toUpperCase() + "S";
-			Constructor<T> constructor = (Constructor<T>)template.getClass().getConstructor(ResultSet.class);
+			Constructor<T> constructor = (Constructor<T>)template.getClass().getConstructor();
 			String queryString = String.format(
 					"select * from %s%s",
 					tableName,
 					template.prepareSQLTemplateWhereClause());
+			
+			if(order != null) { queryString += " ORDER BY " + order; }
+			if(limit != null) { queryString += " LIMIT " + limit; }
 			
 			Log.info(queryString);
 			
@@ -79,7 +91,9 @@ public class DatabaseDBObjectModel implements DBObjectModel {
 				try {
 					LinkedList<T> returned = new LinkedList<T>();
 					while(rs.next()) { 
-						returned.add(constructor.newInstance(rs));
+						T newInst = constructor.newInstance();
+						newInst.setFromResultSet(rs);
+						returned.add(newInst);
 					}
 					return returned;
 					
@@ -107,7 +121,7 @@ public class DatabaseDBObjectModel implements DBObjectModel {
 	public <T extends DBObject> T loadOnly(Class<? extends T> cls, T template) throws DBModelException, DBObjectMissingException {
 		try {
 			String tableName = cls.getSimpleName().toUpperCase() + "S";
-			Constructor<T> constructor = (Constructor<T>)template.getClass().getConstructor(ResultSet.class);
+			Constructor<T> constructor = (Constructor<T>)template.getClass().getConstructor();
 			String queryString = String.format(
 					"select * from %s%s", tableName, template.prepareSQLTemplateWhereClause());
 			
@@ -122,9 +136,11 @@ public class DatabaseDBObjectModel implements DBObjectModel {
 				try {
 					T returned = null;
 					if(rs.next()) { 
-						returned = constructor.newInstance(rs);
+						returned = constructor.newInstance();
+						returned.setFromResultSet(rs);
 					} else { 
-						throw new DBObjectMissingException("No matching DBObject found.");
+						throw new DBObjectMissingException(String.format(
+								"No matching %s found: \"%s\"", cls.getSimpleName(), queryString));
 					}
 					return returned;
 					
@@ -176,7 +192,7 @@ public class DatabaseDBObjectModel implements DBObjectModel {
 		}
 	}
 
-	public <T extends DBObject> T create(Class<? extends T> cls, T obj) throws DBModelException {
+	public <T extends DBObject> void create(Class<? extends T> cls, T obj) throws DBModelException {
 		try {
 			Constructor constructor = cls.getConstructor();
 			String tableName = obj.getClass().getSimpleName().toUpperCase() + "S";
@@ -194,7 +210,6 @@ public class DatabaseDBObjectModel implements DBObjectModel {
 					obj.getAllFields(autoGen));
 			
 			try {
-				T created = (T)constructor.newInstance();
 				prep.setFromObject(obj);
 				prep.stmt.executeUpdate();
 
@@ -207,10 +222,9 @@ public class DatabaseDBObjectModel implements DBObjectModel {
 							//Object keyValue = rs.getObject(i+1);
 							Integer keyValue = rs.getInt(i+1);
 							
-							f.set(created, keyValue);
+							f.set(obj, keyValue);
 						}
 						
-						return created;
 					} else { 
 						throw new DBModelException("No object created.");
 					}
@@ -225,11 +239,7 @@ public class DatabaseDBObjectModel implements DBObjectModel {
 			
 		} catch (NoSuchFieldException e) {
 			throw new DBModelException(e);
-		} catch (InstantiationException e) {
-			throw new DBModelException(e);
 		} catch (IllegalAccessException e) {
-			throw new DBModelException(e);
-		} catch (InvocationTargetException e) {
 			throw new DBModelException(e);
 		} catch (NoSuchMethodException e) {
 			throw new DBModelException(e);
@@ -268,6 +278,8 @@ public class DatabaseDBObjectModel implements DBObjectModel {
 					tableName, 
 					obj.prepareSQLUpdateFieldsClause(),
 					autoGenSelector.toString()); 
+			
+			Log.info(updateStatement);
 			
 			Preparation prep = new Preparation(
 					cxn.prepareStatement(updateStatement), 

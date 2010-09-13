@@ -120,7 +120,7 @@ public class RequestStateServlet extends SkeletonServlet {
 					if(from == null || MACHINE.isReachable(from, to)) { 
 						//writer.println(String.format("<tr><td>%d</td><td>%s</td></tr>", i, to));
 						String field = 
-							String.format("<input type=\"radio\" name=\"new_status\" value=\"%d\">%s</input>",
+							String.format("<input type=\"radio\" name=\"status\" value=\"%d\">%s</input>",
 									i, to);
 						writer.println(field);
 					}

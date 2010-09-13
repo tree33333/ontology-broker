@@ -7,6 +7,12 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Date;
 
+/**
+ * @deprecated
+ * 
+ * @author tdanford
+ *
+ */
 public class StatusUpdate extends DBObject {
 	
 	/**

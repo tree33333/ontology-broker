@@ -13,7 +13,7 @@ $(document).ready(function() {
 		
 	var fill_requests = function(data) { 
 				$('#datatable').html(data); 
-				$('tr.obj_request td.value_request_id').each(function(idx) { 
+				$('tr.obj_request td.value_provisional_term').each(function(idx) { 
 					var request_url = '/request.html?request=' + $(this).text();
 					var request_uri = '/request/' + $(this).text() + '/' 
 					//var format='?format=html';

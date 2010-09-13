@@ -27,6 +27,10 @@ import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.json.JSONWriter;
 import org.sc.probro.BrokerProperties;
+import org.sc.probro.data.BrokerModel;
+import org.sc.probro.data.DBModelException;
+import org.sc.probro.data.DBObjectModel;
+import org.sc.probro.data.DatabaseDBObjectModel;
 import org.sc.probro.data.Request;
 
 public abstract class SkeletonDBServlet extends SkeletonServlet {
@@ -48,4 +52,11 @@ public abstract class SkeletonDBServlet extends SkeletonServlet {
     	}
     }
     
+    public DBObjectModel getDBObjectModel() throws DBModelException { 
+    	return new DatabaseDBObjectModel(dbSource);
+    }
+    
+    public BrokerModel getBrokerModel() throws DBModelException { 
+    	return new BrokerModel(getDBObjectModel());
+    }
 }

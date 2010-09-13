@@ -56,41 +56,61 @@ public class Preparation {
 		stmt.close();
 	}
 
-	public void setFromObject(DBObject obj) throws SQLException { 
+	public void setFromObject(DBObject obj) throws SQLException {
+		assert stmt != null : "Null Statement";
+		
 		for(int i = 0; i < fields.length; i++) { 
 			Class type = fields[i].getType();
 			Object value;
 			try {
 				value = fields[i].get(obj);
-
+				
 				if(DBObject.isSubclass(type, String.class)) {
 					if(clobs.contains(i)) { 
 						String str = (String)value;
 						if(str == null) { 
-							stmt.setAsciiStream(i+1, null);
+							//stmt.setAsciiStream(i+1, null);
+							stmt.setNull(i+1, java.sql.Types.CLOB);
 						} else { 
 							InputStream is = new ByteArrayInputStream(str.getBytes());
 							stmt.setAsciiStream(i+1, is);
 						}
 					} else { 
-						stmt.setString(i+1, (String)value);
+						if(value == null) { 
+							stmt.setNull(i+1, java.sql.Types.VARCHAR);
+						} else { 
+							stmt.setString(i+1, (String)value);
+						}
 					}
 
 				} else if (DBObject.isSubclass(type, Integer.class)) {
-					stmt.setInt(i+1, (Integer)value);
+					Integer ivalue = (Integer)value;
+					if(ivalue == null) { 
+						stmt.setNull(i+1, java.sql.Types.INTEGER);
+					} else { 
+						stmt.setInt(i+1, ivalue);
+					}
 
 				} else if (DBObject.isSubclass(type, Double.class)) {
-					stmt.setDouble(i+1, (Double)value);
+					if(value == null) { 
+						stmt.setNull(i+1, java.sql.Types.DOUBLE);
+					} else { 
+						stmt.setDouble(i+1, (Double)value);
+					}
 
 				} else if (DBObject.isSubclass(type, Boolean.class)) {
-					stmt.setBoolean(i+1, (Boolean)value);
+					if(value == null) { 
+						stmt.setNull(i+1, java.sql.Types.BOOLEAN);
+					} else { 
+						stmt.setBoolean(i+1, (Boolean)value);
+					}
 
 				} else if (DBObject.isSubclass(type, java.util.Date.class)) {
 					java.util.Date d = (java.util.Date)value;
-					if(d != null) { 
-						stmt.setDate(i+1, new java.sql.Date(d.getTime()));
+					if(d==null) { 
+						stmt.setNull(i+1, java.sql.Types.DATE);
 					} else { 
-						stmt.setDate(i+1, null);
+						stmt.setDate(i+1, new java.sql.Date(d.getTime()));
 					}
 
 				}
