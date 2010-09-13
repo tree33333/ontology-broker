@@ -23,11 +23,13 @@ $(document).ready(function() {
 
 				$('#requestform [name="search_text"]').attr('value', request.search_text);		
 				$('#requestform [name="context"]').attr('value', request.context);		
+				$('#requestform [name="comment"]').attr('value', request.comment);		
 				$('#requestform [name="provenance"]').attr('value', request.provenance);		
-				$('#requestform [name="date_submitted"]').attr('value', request.date_submitted);		
-				$('#requestform [name="response_code"]').attr('value', request.response_code);
+				$('#requestform [name="parent_request"]').attr('value', request.request_id);		
+
+				//$('#requestform [name="date_submitted"]').attr('value', request.date_submitted);		
+				//$('#requestform [name="status"]').attr('value', request.status);
 				//$('#requestform #requiredfields').append( '<tr><td>Modify Status:</td><td><input type="text" style="width: 100%;" ' + 'name="new_status" value="' + request['status'] + '" /> </td></tr>');
-				$('#requiredfieldset').append('<input type="hidden" name="request_id" value="' + request.request_id + '" />');
 
 				for(i = 0; i < metadata.length; i++) { 
 					var md = metadata[i];
@@ -48,12 +50,12 @@ $(document).ready(function() {
 					}
 				}
 
-				$('#requestform').removeAttr('action').attr('action', '/request/' + request_id + '/');
-
 				$.get('/states?format=fieldset&from=' + request['status'], 
 					function(statusform) { 
 						$('#tdoptional').append(statusform);
 					});
+
+				$('#requestform').removeAttr('action').attr('action', '/request/' + request_id + '/');
 			});
 	};
 
@@ -91,14 +93,17 @@ body {
 		<table id="requiredfields" style="width: 100%;">
 			<tr><td>Search:</td> <td><input style="width: 100%;" type="text" name="search_text" /> </td></tr>
 			<tr><td>Context:</td><td> <textarea name="context" rows="5" style="width: 100%;" ></textarea> </td><tr>
+			<tr><td>Comment:</td><td> <textarea name="comment" rows="5" style="width: 100%;" ></textarea> </td><tr>
 			<tr><td>Provenance (URL):</td> <td><input style="width: 100%;" type="text" name="provenance" /> </td></tr>
-			<tr><td>Date:</td> <td><input id="dateinput" style="width: 100%;" type="text" name="date_submitted" /> </td></tr>
-			<script type="text/javascript">
-				$('#dateinput').attr('value', Broker.date_string());
-			</script>
 		</table>
 		<input type="hidden" name="ontology_id" value="1" />
-		<input type="hidden" name="user_id" value="1" />
+		<input type="hidden" name="creator_id" value="1" />
+		<input type="hidden" name="modified_by" value="1" />
+		<input type="hidden" name="parent_request" value="1" />
+		<input type="hidden" id="dateinput" name="date_submitted" /> 
+		<script type="text/javascript">
+			$('#dateinput').attr('value', Broker.date_string());
+		</script>
 		</fieldset>
 	</td>
 

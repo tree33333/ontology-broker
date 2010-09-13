@@ -19,7 +19,12 @@ $(document).ready(function() {
 					//var format='?format=html';
 					$(this).html($('<a href="' + request_url + '">' + request_uri + '</a>'));
 				});
-				$('td.value_user_id').each(function(idx) { 
+				$('td.value_modified_by').each(function(idx) { 
+					var user_id = $(this).text()
+					var user_uri = '/user/' + user_id + '/?format=html';
+					$(this).html('<a href="' + user_uri + '">' + user_id + '</a>');
+				});
+				$('td.value_creator_id').each(function(idx) { 
 					var user_id = $(this).text()
 					var user_uri = '/user/' + user_id + '/?format=html';
 					$(this).html('<a href="' + user_uri + '">' + user_id + '</a>');
