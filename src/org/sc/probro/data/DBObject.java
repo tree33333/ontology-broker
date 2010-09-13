@@ -388,6 +388,26 @@ public abstract class DBObject {
 		return true;
 	}
 	
+	public void setFromDBObject(DBObject obj) {
+		Map<String,Field> otherFields = obj.getFieldMap();
+		Map<String,Field> myFields = getFieldMap();
+		
+		for(String fieldName : otherFields.keySet()) { 
+			if(myFields.containsKey(fieldName) && 
+					isSubclass(otherFields.get(fieldName).getType(),
+							myFields.get(fieldName).getType())) { 
+				try {
+					Object otherValue = otherFields.get(fieldName).get(obj);
+					if(otherValue != null) { 
+						myFields.get(fieldName).set(this, otherValue);
+					}
+				} catch (IllegalAccessException e) {
+					throw new IllegalStateException(e);
+				}
+			}
+		}
+	}
+	
 	/**
 	 * Returns the set of field names for which the values whose values differ between this object
 	 * and the object given as an argument.  The argument object must be a subclass of the class of 
