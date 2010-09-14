@@ -13,7 +13,7 @@
      "metadata" : {
        "type" : "array",
        "items" : {
-         "type" : Metadata
+         "type" : "Metadata"
        }
      }
    }
