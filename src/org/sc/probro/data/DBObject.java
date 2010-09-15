@@ -140,6 +140,14 @@ public abstract class DBObject {
 	
 	public DBObject() {}
 	
+	public String getTableName() { 
+		String className = getClass().getSimpleName();
+		if(className.endsWith("Object")) { 
+			className = className.substring(0, className.length()-6);
+		}
+		return className.toUpperCase() + "S";
+	}
+	
 	private static String readClob(Clob c) throws SQLException { 
 		StringBuilder sb = new StringBuilder();
 		Reader r = c.getCharacterStream();
