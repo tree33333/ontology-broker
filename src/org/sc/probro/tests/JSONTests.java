@@ -25,6 +25,7 @@ public class JSONTests {
 		testContains(env.getRequestType(), new RequestExample());
 		testContains(env.getUserType(), new UserExample());
 		testContains(env.getOntologyType(), new OntologyExample());
+		testContains(env.getLinkType(), new LinkExample());
 	}
 	
 	public void testContains(JSONType type, Object value) { 
@@ -42,6 +43,7 @@ class BrokerSchemaEnv extends SchemaEnv {
 	public JSONType getUserType() { return lookupType("User"); }
 	public JSONType getOntologyType() { return lookupType("Ontology"); }
 	public JSONType getSearchResultType() { return lookupType("SearchResult"); }
+	public JSONType getLinkType() { return lookupType("Link"); }
 }
 
 class JSONFile extends JSONObject { 
@@ -95,22 +97,35 @@ class RequestExample extends JSONObject {
 	}
 }
 
+class LinkExample extends JSONObject { 
+	
+	public LinkExample() { 
+		this("http://ashby.csail.mit.edu:8080/user/1/");
+	}
+	
+	public LinkExample(String href) { 
+		try {
+			put("href", href);
+		} catch (JSONException e) {
+			throw new IllegalStateException(e);
+		}
+	}
+}
+
 class MetadataExample extends JSONObject {
 	
 	public MetadataExample() { 
-		super();
-		try {
-			put("metadata_key", "foo");
-			put("metadata_value", "bar");
-		} catch (JSONException e) {
-			throw new IllegalStateException(e);
-		}		
+		this(null, "foo", "bar");
 	}
+	
 	public MetadataExample(RequestExample req, String key, String value) { 
 		super();
 		try {
 			put("metadata_key", key);
 			put("metadata_value", value);
+			put("created_on", "2010-09-01");
+			put("created_by", new LinkExample("http://user.org/"));
+			
 		} catch (JSONException e) {
 			throw new IllegalStateException(e);
 		}
