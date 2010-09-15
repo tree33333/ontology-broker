@@ -1,4 +1,4 @@
-package org.sc.probro;
+package org.sc.probro.utils;
 
 public class TransitionException extends Exception { 
 	public TransitionException(String s1, String m) { 

@@ -1,4 +1,4 @@
-package org.sc.probro;
+package org.sc.probro.utils;
 
 public class Numbering<S> extends Pairing<S,Integer> {
 	

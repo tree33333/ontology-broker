@@ -1,12 +1,12 @@
-package org.sc.probro;
+package org.sc.probro.utils;
 
 import java.util.*;
 import java.util.regex.*;
 
-public class RequestStateMachine {
+public class StateMachine {
 	
 	public static void main(String[] args) throws TransitionException { 
-		RequestStateMachine sm = new RequestStateMachine(true);
+		StateMachine sm = new StateMachine(true);
 		
 		sm.addState("A");
 		sm.addState("B");
@@ -26,11 +26,11 @@ public class RequestStateMachine {
 	private Map<String,Map<Pattern,String>> transitions;
 	private boolean selfDefault;
 	
-	public RequestStateMachine() { 
+	public StateMachine() { 
 		this(false);
 	}
 
-	public RequestStateMachine(boolean selfDefault) { 
+	public StateMachine(boolean selfDefault) { 
 		transitions = new TreeMap<String,Map<Pattern,String>>();
 		this.selfDefault = selfDefault;
 	}

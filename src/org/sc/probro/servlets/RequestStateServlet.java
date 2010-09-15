@@ -11,14 +11,14 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.sc.probro.BrokerException;
-import org.sc.probro.Numbering;
-import org.sc.probro.Pairing;
-import org.sc.probro.RequestStateMachine;
+import org.sc.probro.utils.Numbering;
+import org.sc.probro.utils.Pairing;
+import org.sc.probro.utils.StateMachine;
 
 public class RequestStateServlet extends SkeletonServlet {
 	
 	public static Numbering<String> STATES;
-	public static RequestStateMachine MACHINE;
+	public static StateMachine MACHINE;
 	
 	static { 
 		STATES = new Numbering<String>(
@@ -32,7 +32,7 @@ public class RequestStateServlet extends SkeletonServlet {
 				"WITHDRAWN"
 				);
 		
-		MACHINE = new RequestStateMachine();
+		MACHINE = new StateMachine();
 		for(int i = 0; i < STATES.size(); i++) { 
 			MACHINE.addState(STATES.backward(i));
 		}

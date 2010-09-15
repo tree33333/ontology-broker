@@ -7,6 +7,7 @@ import java.io.*;
 import org.json.*;
 import org.sc.probro.data.MetadataObject;
 import org.sc.probro.data.RequestObject;
+import org.sc.probro.utils.Numbering;
 
 /**
  * BulkRequestTable represents the <tt><em>BulkRequest</em></tt> and <tt><em>BulkResponse</em></tt> 
