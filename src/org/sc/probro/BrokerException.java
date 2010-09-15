@@ -10,7 +10,7 @@ public class BrokerException extends Exception {
 	
 	public static Map<Integer,String> ERROR_NAMES; 
 	
-	static { 
+	static {
 		ERROR_NAMES = new TreeMap<Integer,String>();
 		ERROR_NAMES.put(HttpServletResponse.SC_BAD_REQUEST, "Bad Request");
 		ERROR_NAMES.put(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
