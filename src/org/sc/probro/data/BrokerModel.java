@@ -11,8 +11,8 @@ import java.util.*;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.sc.probro.BrokerException;
 import org.sc.probro.BrokerStart;
+import org.sc.probro.exceptions.BrokerException;
 import org.sc.probro.servlets.RequestStateServlet;
 
 public class BrokerModel {

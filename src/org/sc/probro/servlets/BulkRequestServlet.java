@@ -14,7 +14,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.eclipse.jetty.util.log.Log;
-import org.sc.probro.BrokerException;
 import org.sc.probro.BrokerProperties;
 import org.sc.probro.BulkRequestTable;
 import org.sc.probro.data.BrokerModel;
@@ -24,6 +23,7 @@ import org.sc.probro.data.DBObjectMissingException;
 import org.sc.probro.data.MetadataObject;
 import org.sc.probro.data.ProvisionalTermObject;
 import org.sc.probro.data.RequestObject;
+import org.sc.probro.exceptions.BrokerException;
 
 /**
  * Cleared for BrokerModel usage.

@@ -1,4 +1,4 @@
-package org.sc.probro;
+package org.sc.probro.exceptions;
 
 import java.util.*;
 

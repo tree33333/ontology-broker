@@ -10,7 +10,7 @@ import org.eclipse.jetty.util.log.Log;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.sc.probro.BrokerException;
+import org.sc.probro.exceptions.BrokerException;
 import org.sc.probro.utils.Numbering;
 import org.sc.probro.utils.Pairing;
 import org.sc.probro.utils.StateMachine;

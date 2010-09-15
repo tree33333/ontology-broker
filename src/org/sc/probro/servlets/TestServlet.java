@@ -7,7 +7,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.json.*;
-import org.sc.probro.BrokerException;
+import org.sc.probro.exceptions.BrokerException;
 
 public class TestServlet extends SkeletonServlet {
 

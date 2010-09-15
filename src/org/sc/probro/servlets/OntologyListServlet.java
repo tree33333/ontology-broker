@@ -22,12 +22,12 @@ import org.json.JSONWriter;
 import org.sc.obo.OBOOntology;
 import org.sc.obo.OBOStanza;
 import org.sc.obo.OBOValue;
-import org.sc.probro.BrokerException;
 import org.sc.probro.BrokerProperties;
 import org.sc.probro.data.DBModelException;
 import org.sc.probro.data.DBObject;
 import org.sc.probro.data.DBObjectModel;
 import org.sc.probro.data.OntologyObject;
+import org.sc.probro.exceptions.BrokerException;
 import org.sc.probro.lucene.IndexCreator;
 import org.sc.probro.sparql.*;
 

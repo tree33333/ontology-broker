@@ -14,7 +14,6 @@ import org.eclipse.jetty.util.log.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONWriter;
-import org.sc.probro.BrokerException;
 import org.sc.probro.BrokerProperties;
 import org.sc.probro.data.DBModelException;
 import org.sc.probro.data.DBObject;
@@ -22,6 +21,7 @@ import org.sc.probro.data.DBObjectMissingException;
 import org.sc.probro.data.DBObjectModel;
 import org.sc.probro.data.MetadataObject;
 import org.sc.probro.data.RequestObject;
+import org.sc.probro.exceptions.BrokerException;
 
 import java.sql.*;
 import java.util.regex.*;

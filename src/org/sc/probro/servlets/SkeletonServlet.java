@@ -35,9 +35,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.json.JSONWriter;
-import org.sc.probro.BrokerException;
 import org.sc.probro.data.DBObject;
 import org.sc.probro.data.RequestObject;
+import org.sc.probro.exceptions.BrokerException;
 
 public abstract class SkeletonServlet extends HttpServlet {
 	

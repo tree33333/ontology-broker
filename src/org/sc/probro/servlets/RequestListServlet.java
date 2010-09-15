@@ -22,9 +22,9 @@ import org.apache.derby.jdbc.EmbeddedDataSource;
 import org.eclipse.jetty.util.log.Log;
 import org.json.JSONException;
 import org.json.JSONWriter;
-import org.sc.probro.BrokerException;
 import org.sc.probro.BrokerProperties;
 import org.sc.probro.data.*;
+import org.sc.probro.exceptions.BrokerException;
 import org.sc.probro.lucene.PROIndexer;
 
 /**
