@@ -23,19 +23,19 @@ public class BrokerModel {
 		model = objModel;
 	}
 	
-	public synchronized boolean contains(Ontology ontology) throws DBModelException { 
-		return model.count(Ontology.class, ontology) > 0;
+	public synchronized boolean contains(OntologyObject ontology) throws DBModelException { 
+		return model.count(OntologyObject.class, ontology) > 0;
 	}
 	
-	public synchronized boolean contains(User user) throws DBModelException { 
-		return model.count(User.class, user) > 0;
+	public synchronized boolean contains(UserObject user) throws DBModelException { 
+		return model.count(UserObject.class, user) > 0;
 	}
 	
-	public synchronized boolean contains(ProvisionalTerm term) throws DBModelException { 
-		return model.count(ProvisionalTerm.class, term) > 0;
+	public synchronized boolean contains(ProvisionalTermObject term) throws DBModelException { 
+		return model.count(ProvisionalTermObject.class, term) > 0;
 	}
 	
-	public synchronized String checkRequestChange(Request oldReq, Request newReq) {
+	public synchronized String checkRequestChange(RequestObject oldReq, RequestObject newReq) {
 
 		if(!oldReq.creator_id.equals(newReq.creator_id)) { 
 			return String.format("Illegal CREATOR_ID change (%d -> %d)", 
@@ -96,16 +96,16 @@ public class BrokerModel {
 		model.close();
 	}
 	
-	public synchronized Collection<User> listUsers() throws DBModelException { 
-		return model.load(User.class, new User());
+	public synchronized Collection<UserObject> listUsers() throws DBModelException { 
+		return model.load(UserObject.class, new UserObject());
 	}
 	
-	public synchronized Collection<Ontology> listOntologies() throws DBModelException { 
-		return model.load(Ontology.class, new Ontology());
+	public synchronized Collection<OntologyObject> listOntologies() throws DBModelException { 
+		return model.load(OntologyObject.class, new OntologyObject());
 	}
 	
-	public synchronized Collection<Request> listLatestRequests() throws DBModelException {
-		LinkedList<Request> reqs = new LinkedList<Request>();
+	public synchronized Collection<RequestObject> listLatestRequests() throws DBModelException {
+		LinkedList<RequestObject> reqs = new LinkedList<RequestObject>();
 
 		// 
 		// This is annoying -- I have to break the abstraction barrier here, if I want to avoid
@@ -127,7 +127,7 @@ public class BrokerModel {
 							"order by requests.date_submitted asc");
 					try { 
 						while(rs.next()) { 
-							Request req = new Request(rs);
+							RequestObject req = new RequestObject(rs);
 							reqs.add(req);
 						}
 						
@@ -153,27 +153,27 @@ public class BrokerModel {
 		return reqs;
 	}
 	
-	public synchronized ProvisionalTerm getProvisionalTerm(final String term) throws DBModelException, DBObjectMissingException {
-		ProvisionalTerm template = new ProvisionalTerm();
+	public synchronized ProvisionalTermObject getProvisionalTerm(final String term) throws DBModelException, DBObjectMissingException {
+		ProvisionalTermObject template = new ProvisionalTermObject();
 		template.provisional_term = term;
-		return model.loadOnly(ProvisionalTerm.class, template);
+		return model.loadOnly(ProvisionalTermObject.class, template);
 	}
 	
-	public synchronized Collection<ProvisionalTerm> listProvisionalTerms() throws DBModelException { 
-		return model.load(ProvisionalTerm.class, new ProvisionalTerm());
+	public synchronized Collection<ProvisionalTermObject> listProvisionalTerms() throws DBModelException { 
+		return model.load(ProvisionalTermObject.class, new ProvisionalTermObject());
 	}
 	
-	public synchronized Request getRequest(int request_id) throws DBModelException, DBObjectMissingException { 
-		Request template = new Request();
+	public synchronized RequestObject getRequest(int request_id) throws DBModelException, DBObjectMissingException { 
+		RequestObject template = new RequestObject();
 		template.request_id = request_id;
-		return model.loadOnly(Request.class, template);
+		return model.loadOnly(RequestObject.class, template);
 	}
 	
-	public synchronized Request getLatestRequest(ProvisionalTerm term) throws DBModelException { 
-		Request template = new Request();
+	public synchronized RequestObject getLatestRequest(ProvisionalTermObject term) throws DBModelException { 
+		RequestObject template = new RequestObject();
 		template.request_id = term.request_id;
 		try {
-			return model.loadOnly(Request.class, template);
+			return model.loadOnly(RequestObject.class, template);
 		} catch (DBObjectMissingException e) {
 			throw new DBModelException(String.format(
 					"ProvisionalTerm request_id=%d doesn't match any known Request.", 
@@ -181,17 +181,17 @@ public class BrokerModel {
 		}
 	}
 	
-	public synchronized Collection<Request> getAllRequests(final ProvisionalTerm term) throws DBModelException {
-		Request template = new Request(); 
+	public synchronized Collection<RequestObject> getAllRequests(final ProvisionalTermObject term) throws DBModelException {
+		RequestObject template = new RequestObject(); 
 		template.request_id = term.request_id;
-		return model.load(Request.class, template, 
+		return model.load(RequestObject.class, template, 
 				"date_submitted DESC", null);
 	}
 	
-	public synchronized Collection<Metadata> getMetadata(final Request req) throws DBModelException {
-		Metadata template = new Metadata();
+	public synchronized Collection<MetadataObject> getMetadata(final RequestObject req) throws DBModelException {
+		MetadataObject template = new MetadataObject();
 		template.request_id = req.request_id;
-		return model.load(Metadata.class, template);
+		return model.load(MetadataObject.class, template);
 	}
 	
 	public synchronized void startTransaction() throws DBModelException { 
@@ -206,20 +206,20 @@ public class BrokerModel {
 		model.rollbackTransaction();
 	}
 
-	public synchronized ProvisionalTerm createNewRequest(Request req, Collection<Metadata> metadatas) throws DBModelException { 
-		ProvisionalTerm term = new ProvisionalTerm();
+	public synchronized ProvisionalTermObject createNewRequest(RequestObject req, Collection<MetadataObject> metadatas) throws DBModelException { 
+		ProvisionalTermObject term = new ProvisionalTermObject();
 		term.provisional_term = generateRandomTerm();
-		model.create(ProvisionalTerm.class, term);
+		model.create(ProvisionalTermObject.class, term);
 
 		req.provisional_term = term.provisional_term;
-		model.create(Request.class, req);
+		model.create(RequestObject.class, req);
 
-		for(Metadata md : metadatas) { 
+		for(MetadataObject md : metadatas) { 
 			md.request_id = req.request_id;
 			md.created_on = req.date_submitted;
 			md.created_by = req.modified_by;
 			
-			model.create(Metadata.class, md);
+			model.create(MetadataObject.class, md);
 		}
 
 		term.request_id = req.request_id;
@@ -228,8 +228,8 @@ public class BrokerModel {
 		return term;
 	}
 
-	public synchronized void updateRequest(ProvisionalTerm term, Request req, Collection<Metadata> metadatas) throws DBModelException, BrokerException { 
-		Request latest = getLatestRequest(term);
+	public synchronized void updateRequest(ProvisionalTermObject term, RequestObject req, Collection<MetadataObject> metadatas) throws DBModelException, BrokerException { 
+		RequestObject latest = getLatestRequest(term);
 
 		String error = checkRequestChange(latest, req);
 		if(error != null) { 
@@ -238,14 +238,14 @@ public class BrokerModel {
 
 		req.parent_request = latest.request_id;
 
-		model.create(Request.class, req);
+		model.create(RequestObject.class, req);
 
-		for(Metadata md : metadatas) { 
+		for(MetadataObject md : metadatas) { 
 			md.request_id = req.request_id;
 			md.created_on = req.date_submitted;
 			md.created_by = req.modified_by;
 			
-			model.create(Metadata.class, md);
+			model.create(MetadataObject.class, md);
 		}
 
 		term.request_id = req.request_id;

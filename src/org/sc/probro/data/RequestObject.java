@@ -9,7 +9,7 @@ import org.json.JSONException;
 import org.json.JSONWriter;
 import org.sc.probro.BrokerStart;
 
-public class Request extends DBObject {
+public class RequestObject extends DBObject {
 	
 	public static final Integer RESPONSE_REDUNDANT 		= 0;
 	public static final Integer RESPONSE_FULFILLED 		= 1;
@@ -33,11 +33,11 @@ public class Request extends DBObject {
 	public Integer status;
 	public Integer ontology_id;
 
-	public Request() { 
+	public RequestObject() { 
 		super();
 	}
 	
-	public Request(ResultSet rs) throws SQLException { super(rs); }
+	public RequestObject(ResultSet rs) throws SQLException { super(rs); }
 	
 	public String getProvisionalTerm() {
 		return String.format("http://%s:%d/request/%s/", 
@@ -63,8 +63,8 @@ public class Request extends DBObject {
 	}
 	
 	public boolean equals(Object o) { 
-		if(!(o instanceof Request)) { return false; }
-		Request r = (Request)o;
+		if(!(o instanceof RequestObject)) { return false; }
+		RequestObject r = (RequestObject)o;
 		return r.request_id.equals(request_id);
 	}
 	

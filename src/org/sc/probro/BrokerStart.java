@@ -47,12 +47,12 @@ public class BrokerStart {
 		
 		//js.addServlet("jsp", new JspServlet(), "*.jsp");
 
-		js.addServlet("User", new DBObjectServlet<User>(props, User.class, "user_id"), "/user/*");
+		js.addServlet("User", new DBObjectServlet<UserObject>(props, UserObject.class, "user_id"), "/user/*");
 		js.addServlet("Request", new RequestServlet(props), "/request/*");		
-		js.addServlet("Ontology", new DBObjectServlet<Ontology>(props, Ontology.class, "ontology_id"), "/ontology/*");		
+		js.addServlet("Ontology", new DBObjectServlet<OntologyObject>(props, OntologyObject.class, "ontology_id"), "/ontology/*");		
 		js.addServlet("BulkRequests", new BulkRequestServlet(props), "/bulk-requests");
 		js.addServlet("Requests", new RequestListServlet(props), "/requests");
-		js.addServlet("Users", new DBObjectListServlet<User>(props, User.class), "/users");
+		js.addServlet("Users", new DBObjectListServlet<UserObject>(props, UserObject.class), "/users");
 		//js.addServlet("Ontologies", new DBObjectListServlet<Ontology>(props, Ontology.class), "/ontologies");
 		js.addServlet("Ontologies", new OntologyListServlet(props), "/ontologies");
 		js.addServlet("TextQuery", new TextQueryServlet(props), "/query");

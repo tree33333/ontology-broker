@@ -27,8 +27,8 @@ import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.eclipse.jetty.util.log.Log;
-import org.sc.probro.data.Metadata;
-import org.sc.probro.data.Request;
+import org.sc.probro.data.MetadataObject;
+import org.sc.probro.data.RequestObject;
 
 public class PROIndexer {
 	
@@ -99,7 +99,7 @@ public class PROIndexer {
 		writer.commit();
 	}
 	
-	public void addQuery(Request req, Collection<Metadata> mds) throws IOException { 
+	public void addQuery(RequestObject req, Collection<MetadataObject> mds) throws IOException { 
 		Document doc = new Document();
 
 		doc.add(new Field("protein-id", String.valueOf(req.request_id), 
@@ -118,7 +118,7 @@ public class PROIndexer {
 		descriptions.add(req.search_text);
 		descriptions.add(req.context);
 
-		for(Metadata md : mds) { 
+		for(MetadataObject md : mds) { 
 			if(md.metadata_key.equals("uniprot")) { 
 				String[] array = md.metadata_value.split("[, ]");
 				for(String acc : array) { accessions.add(acc); }

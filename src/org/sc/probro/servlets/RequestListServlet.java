@@ -63,7 +63,7 @@ public class RequestListServlet extends SkeletonDBServlet {
 
     		Pattern metadataKey = Pattern.compile("^metadata_(.*)$");
 
-    		LinkedList<Metadata> metadatas = new LinkedList<Metadata>();
+    		LinkedList<MetadataObject> metadatas = new LinkedList<MetadataObject>();
 
     		try {
     			//
@@ -73,7 +73,7 @@ public class RequestListServlet extends SkeletonDBServlet {
     			//
     			Map paramMap = request.getParameterMap();
 
-    			Request obj = new Request();
+    			RequestObject obj = new RequestObject();
 
     			json.object();
 
@@ -93,7 +93,7 @@ public class RequestListServlet extends SkeletonDBServlet {
 
     						// we want to ignore blank metadata values.
     						if(metaValue.length() > 0) { 
-    							Metadata m = new Metadata();
+    							MetadataObject m = new MetadataObject();
     							m.metadata_key = keyName;
     							m.metadata_value = value;
     							metadatas.add(m);
@@ -130,7 +130,7 @@ public class RequestListServlet extends SkeletonDBServlet {
     			obj.ontology_term = null;
 
     			if(obj.status == null) {
-    				obj.status = Request.RESPONSE_PENDING;
+    				obj.status = RequestObject.RESPONSE_PENDING;
     				json.key("response_code").value(String.valueOf(obj.status));
     			}
 
@@ -145,7 +145,7 @@ public class RequestListServlet extends SkeletonDBServlet {
     			try { 
     				model.startTransaction();
     				try {
-    					ProvisionalTerm provisionalTerm = model.createNewRequest(obj, metadatas);
+    					ProvisionalTermObject provisionalTerm = model.createNewRequest(obj, metadatas);
 
     			        PROIndexer indexer = new PROIndexer(new File(luceneIndexPath));
     			        try { 
@@ -191,7 +191,7 @@ public class RequestListServlet extends SkeletonDBServlet {
     	try { 
 			Map<String,String[]> params = decodedParams(request);
 
-			Request obj = new Request();
+			RequestObject obj = new RequestObject();
 			obj.setFromParameters(params);
 
 			String format = params.containsKey("format") ? params.get("format")[0] : "json";
@@ -206,7 +206,7 @@ public class RequestListServlet extends SkeletonDBServlet {
 				try { // ends with model.close() 
 
 					if(obj.ontology_id != null) { 
-						Ontology ontology = new Ontology();
+						OntologyObject ontology = new OntologyObject();
 						ontology.ontology_id = obj.ontology_id;
 						
 						if(!model.contains(ontology)) { 
@@ -225,8 +225,8 @@ public class RequestListServlet extends SkeletonDBServlet {
 						stringer.write("\n");
 					}
 
-					Collection<Request> requests = model.listLatestRequests();
-					for(Request res : requests) { 
+					Collection<RequestObject> requests = model.listLatestRequests();
+					for(RequestObject res : requests) { 
 						if(format.equals("json")) { 
 							res.writeJSONObject(json);
 

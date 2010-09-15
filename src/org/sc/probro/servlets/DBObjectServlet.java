@@ -20,8 +20,8 @@ import org.sc.probro.data.DBModelException;
 import org.sc.probro.data.DBObject;
 import org.sc.probro.data.DBObjectMissingException;
 import org.sc.probro.data.DBObjectModel;
-import org.sc.probro.data.Metadata;
-import org.sc.probro.data.Request;
+import org.sc.probro.data.MetadataObject;
+import org.sc.probro.data.RequestObject;
 
 import java.sql.*;
 import java.util.regex.*;
@@ -158,7 +158,7 @@ public class DBObjectServlet<T extends DBObject> extends SkeletonDBServlet {
 
 					while(keyItr.hasNext()) { 
 						String key = keyItr.next();
-						Field f = Request.class.getField(key);
+						Field f = RequestObject.class.getField(key);
 						int mod = f.getModifiers();
 						if(Modifier.isPublic(mod) && !Modifier.isStatic(mod)) { 
 							f.set(req, obj.get(key));

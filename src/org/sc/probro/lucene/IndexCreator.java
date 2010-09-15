@@ -28,8 +28,8 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.eclipse.jetty.util.log.Log;
 import org.sc.probro.BrokerProperties;
-import org.sc.probro.data.Metadata;
-import org.sc.probro.data.Request;
+import org.sc.probro.data.MetadataObject;
+import org.sc.probro.data.RequestObject;
 
 public class IndexCreator {
 	

@@ -27,7 +27,7 @@ import org.sc.probro.BrokerProperties;
 import org.sc.probro.data.DBModelException;
 import org.sc.probro.data.DBObject;
 import org.sc.probro.data.DBObjectModel;
-import org.sc.probro.data.Ontology;
+import org.sc.probro.data.OntologyObject;
 import org.sc.probro.lucene.IndexCreator;
 import org.sc.probro.sparql.*;
 
@@ -39,14 +39,14 @@ import com.hp.hpl.jena.rdf.model.RDFNode;
  * 
  * @author tdanford
  */
-public class OntologyListServlet extends DBObjectListServlet<Ontology> {
+public class OntologyListServlet extends DBObjectListServlet<OntologyObject> {
 	
 	private OBOSparql oboSparql;
 	private Prefixes prefs;
 	private File indexDir;
 
 	public OntologyListServlet(BrokerProperties ps) { 
-		super(ps, Ontology.class);
+		super(ps, OntologyObject.class);
 		oboSparql = new OBOSparql(ps);
 		prefs = Prefixes.DEFAULT;
 		indexDir = new File(ps.getLuceneIndex());
@@ -157,15 +157,15 @@ public class OntologyListServlet extends DBObjectListServlet<Ontology> {
 
 				DBObjectModel model = getDBObjectModel();
 				try { 
-					Ontology template = new Ontology();
+					OntologyObject template = new OntologyObject();
 					template.name = ontologyName;
 
-					if(model.count(Ontology.class, template) > 0) { 
+					if(model.count(OntologyObject.class, template) > 0) { 
 						throw new BrokerException(HttpServletResponse.SC_CONFLICT,
 								String.format("Ontology '%s' already exists", ontologyName));					
 					} else { 
 						addOntologyToIndex(ids, descs);
-						model.create(Ontology.class, template);
+						model.create(OntologyObject.class, template);
 
 						response.setStatus(HttpServletResponse.SC_OK);
 						response.sendRedirect("/ontologies");

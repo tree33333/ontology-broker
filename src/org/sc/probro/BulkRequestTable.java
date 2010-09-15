@@ -5,8 +5,8 @@ import java.util.regex.*;
 import java.io.*;
 
 import org.json.*;
-import org.sc.probro.data.Metadata;
-import org.sc.probro.data.Request;
+import org.sc.probro.data.MetadataObject;
+import org.sc.probro.data.RequestObject;
 
 /**
  * BulkRequestTable represents the <tt><em>BulkRequest</em></tt> and <tt><em>BulkResponse</em></tt> 
@@ -109,11 +109,11 @@ public class BulkRequestTable {
 	 * @param line The index of the row to convert.
 	 * @return
 	 */
-	public Request getRequest(int line) { return lines.get(line).getRequest(); }
+	public RequestObject getRequest(int line) { return lines.get(line).getRequest(); }
 	
 	public int getNewStatus(int line) { return lines.get(line).newStatus(); }
 	
-	public Collection<Metadata> getMetadata(int line) { return lines.get(line).getMetadata(); }
+	public Collection<MetadataObject> getMetadata(int line) { return lines.get(line).getMetadata(); }
 	
 	public void printTable(PrintWriter writer) { 
 		for(int i = 0; i < REQUEST_HEADERS.length; i++) { 
@@ -142,7 +142,7 @@ public class BulkRequestTable {
 			for(int i = 0; i < data.length; i++) { data[i] = ""; }
 		}
 		
-		public BulkRequestLine(Request req, Collection<Metadata> mds) { 
+		public BulkRequestLine(RequestObject req, Collection<MetadataObject> mds) { 
 			this();
 		
 			throw new UnsupportedOperationException("implement me");
@@ -177,15 +177,15 @@ public class BulkRequestTable {
 			}
 		}
 		
-		public Request getRequest() { 
-			Request req = new Request();
+		public RequestObject getRequest() { 
+			RequestObject req = new RequestObject();
 			req.request_id = requestID();
 			req.search_text = data[2];
 			return req;
 		}
 		
-		public Collection<Metadata> getMetadata() { 
-			LinkedList<Metadata> mds = new LinkedList<Metadata>();
+		public Collection<MetadataObject> getMetadata() { 
+			LinkedList<MetadataObject> mds = new LinkedList<MetadataObject>();
 			
 			for(int i = 0; i < METADATA_KEYS.length; i++) { 
 				if(METADATA_KEYS[i] != null && data[i] != null && data[i].length() > 0) { 
@@ -193,7 +193,7 @@ public class BulkRequestTable {
 					Integer reqID = requestID();
 					for(int j = 0; j < valueArray.length; j++) {
 						if(valueArray[j].length() > 0) { 
-							Metadata md = new Metadata();
+							MetadataObject md = new MetadataObject();
 							md.request_id = reqID;
 							md.metadata_key = METADATA_KEYS[i];
 							md.metadata_value = valueArray[j];

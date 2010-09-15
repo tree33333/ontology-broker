@@ -21,9 +21,9 @@ import org.sc.probro.data.BrokerModel;
 import org.sc.probro.data.DBModelException;
 import org.sc.probro.data.DBObject;
 import org.sc.probro.data.DBObjectMissingException;
-import org.sc.probro.data.Metadata;
-import org.sc.probro.data.ProvisionalTerm;
-import org.sc.probro.data.Request;
+import org.sc.probro.data.MetadataObject;
+import org.sc.probro.data.ProvisionalTermObject;
+import org.sc.probro.data.RequestObject;
 
 /**
  * Cleared for BrokerModel usage.
@@ -67,9 +67,9 @@ public class BulkRequestServlet extends SkeletonDBServlet {
 				BrokerModel model = getBrokerModel();
 				try { 
 
-					Request template = new Request();
-					template.status = Request.RESPONSE_PENDING;
-					Collection<Request> reqs = model.listLatestRequests();
+					RequestObject template = new RequestObject();
+					template.status = RequestObject.RESPONSE_PENDING;
+					Collection<RequestObject> reqs = model.listLatestRequests();
 
 					response.setContentType("text");
 					response.setStatus(HttpServletResponse.SC_OK);
@@ -77,13 +77,13 @@ public class BulkRequestServlet extends SkeletonDBServlet {
 					PrintWriter writer = response.getWriter();
 					printRow(writer, headers);
 
-					for(Request req : reqs) { 
+					for(RequestObject req : reqs) { 
 
-						Collection<Metadata> mds = model.getMetadata(req);
+						Collection<MetadataObject> mds = model.getMetadata(req);
 						if(mds == null) { return; }
 
 						Map<String,String> metaMap = new TreeMap<String,String>();
-						for(Metadata md : mds) { 
+						for(MetadataObject md : mds) { 
 							if(!metaMap.containsKey(md.metadata_key)) { 
 								metaMap.put(md.metadata_key, md.metadata_value);
 							} else { 
@@ -143,18 +143,18 @@ public class BulkRequestServlet extends SkeletonDBServlet {
 
 					Map<Integer,String> errorMap = new TreeMap<Integer,String>();
 
-					Map<Integer,ProvisionalTerm> terms = new TreeMap<Integer,ProvisionalTerm>();
-					Map<Integer,Request> submitted = new TreeMap<Integer,Request>();
-					Map<Integer,Request> dbRequests = new TreeMap<Integer,Request>();
-					Map<Integer,Collection<Metadata>> mds = new TreeMap<Integer,Collection<Metadata>>();
+					Map<Integer,ProvisionalTermObject> terms = new TreeMap<Integer,ProvisionalTermObject>();
+					Map<Integer,RequestObject> submitted = new TreeMap<Integer,RequestObject>();
+					Map<Integer,RequestObject> dbRequests = new TreeMap<Integer,RequestObject>();
+					Map<Integer,Collection<MetadataObject>> mds = new TreeMap<Integer,Collection<MetadataObject>>();
 
 					for(int i = 0; i < table.getNumRows(); i++) {
 						// retrieve the request line from the submitted bulk request table, 
 						// and the corresponding request entry from the database...
-						Request submittedReq = table.getRequest(i);
-						ProvisionalTerm term = model.getProvisionalTerm(submittedReq.provisional_term); 
-						Collection<Metadata> submittedMetadata = table.getMetadata(i);
-						Request dbReq = model.getLatestRequest(term);
+						RequestObject submittedReq = table.getRequest(i);
+						ProvisionalTermObject term = model.getProvisionalTerm(submittedReq.provisional_term); 
+						Collection<MetadataObject> submittedMetadata = table.getMetadata(i);
+						RequestObject dbReq = model.getLatestRequest(term);
 
 						//... and check to make sure that the bulk request didn't illegaly
 						// update one of the values in the request.

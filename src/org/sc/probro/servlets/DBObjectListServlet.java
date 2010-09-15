@@ -28,7 +28,7 @@ import org.sc.probro.BrokerProperties;
 import org.sc.probro.data.DBModelException;
 import org.sc.probro.data.DBObject;
 import org.sc.probro.data.DBObjectModel;
-import org.sc.probro.data.Request;
+import org.sc.probro.data.RequestObject;
 
 /**
  * Converted to using the Jetty Logging system.

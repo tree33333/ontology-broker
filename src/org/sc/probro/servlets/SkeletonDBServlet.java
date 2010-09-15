@@ -31,7 +31,7 @@ import org.sc.probro.data.BrokerModel;
 import org.sc.probro.data.DBModelException;
 import org.sc.probro.data.DBObjectModel;
 import org.sc.probro.data.DatabaseDBObjectModel;
-import org.sc.probro.data.Request;
+import org.sc.probro.data.RequestObject;
 
 public abstract class SkeletonDBServlet extends SkeletonServlet {
 	
