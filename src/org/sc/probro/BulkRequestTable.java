@@ -7,6 +7,7 @@ import java.io.*;
 import org.json.*;
 import org.sc.probro.data.MetadataObject;
 import org.sc.probro.data.RequestObject;
+import org.sc.probro.servlets.RequestStateServlet;
 import org.sc.probro.utils.Numbering;
 
 /**
@@ -21,13 +22,6 @@ import org.sc.probro.utils.Numbering;
  * update of, the database).  
  */
 public class BulkRequestTable {
-	
-	public static Numbering<String> STATUS_NUMBERING = 
-		new Numbering<String>(
-				"REDUNDANT", "FULFILLED",
-				"PENDING", "INCOMPLETE",
-				"ERROR", "ESCALATE"
-				);
 
 	public static String[] REQUEST_HEADERS = new String[] { 
 		"Tracking ID",
@@ -166,7 +160,7 @@ public class BulkRequestTable {
 		}
 		
 		public int newStatus() { 
-			return STATUS_NUMBERING.number(extra.get(0));
+			return RequestStateServlet.STATES.number(extra.get(0));
 		}
 		
 		public Integer requestID() { 
