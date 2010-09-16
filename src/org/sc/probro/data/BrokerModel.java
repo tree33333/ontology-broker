@@ -23,6 +23,8 @@ public class BrokerModel {
 		model = objModel;
 	}
 	
+	public DBObjectModel getModel() { return model; }
+	
 	public synchronized boolean contains(OntologyObject ontology) throws DBModelException { 
 		return model.count(OntologyObject.class, ontology) > 0;
 	}
