@@ -1,16 +1,20 @@
  {
-  "name" : "SearchResult",
-  "type" : "object",
-  "properties" : { 
-     "id" : "string",
-     "type" : "string",   // "type" -> "response-type", see below.
-     "description" : {
-       "type" : "array",
-       "items" : { "type" : "string" }
-     },
-     "accession" : {
-       "type" : "array",
-       "items" : { "type" : "string" }
-     }
+    name : "SearchResult",
+    type : "object",
+    
+    properties : { 
+  
+        id : "string",
+        response_type : "string",  
+             
+        description : {
+            type : "array",
+            items : { type : "string" }
+        },
+        
+        accession : {
+            type : "array",
+            items : { type : "string" }
+        }
   }
 }

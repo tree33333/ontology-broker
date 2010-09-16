@@ -1,17 +1,12 @@
  { 
-   "name": "User", 
-   "type": "object",
+   name: "User", 
+   type: "object",
    
-   "properties": {
-   
-     "user_id" : { 
-       "type" : "integer",
-       "description" : "database-generated unique numeric identifier" 
-     },
+   properties: {
      
-     "user_name" : {
-       "type" : "string", 
-       "description" : "Human-readable User Name"
+     user_name : {
+       type : "string", 
+       description : "Human-readable User Name"
      }
    }
  }
