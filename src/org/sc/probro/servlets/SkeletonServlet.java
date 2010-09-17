@@ -47,12 +47,13 @@ public abstract class SkeletonServlet extends HttpServlet {
 	
 	public static final String CONTENT_TYPE_JSON = "application/json";
 	public static final String CONTENT_TYPE_HTML = "text/html";
+	public static final String CONTENT_TYPE_FORM = "application/x-www-form-urlencoded";
 	
 	public String contentTypeFromFormat(String format, String... accept) throws BrokerException {
 		Set<String> acc = new TreeSet<String>();
-		for(String a : accept) { acc.add(a); }
+		for(String a : accept) { if(a != null) { acc.add(a); } }
 		
-		if(accept.length > 0 && !acc.contains(format)) { 
+		if(acc.size() > 0 && !acc.contains(format)) { 
 			throw new BrokerException(HttpServletResponse.SC_BAD_REQUEST, String.format(
 					"Unacceptable format '%s'", format));
 		}
