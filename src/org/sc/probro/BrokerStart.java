@@ -21,6 +21,7 @@ import org.eclipse.jetty.servlet.ServletMapping;
 import org.eclipse.jetty.util.log.Log;
 import org.sc.probro.data.*;
 import org.sc.probro.servlets.*;
+import org.sc.probro.servlets.old.*;
 
 public class BrokerStart {
 	
@@ -33,6 +34,10 @@ public class BrokerStart {
 		} catch (UnknownHostException e) {
 			System.err.println(String.format("Unable to find HOSTNAME: %s", e.getMessage()));
 		}
+	}
+	
+	public static String getURLPrefix() { 
+		return String.format("http://%s:%d/", HOSTNAME, PORT);
 	}
 
 	public static void main(String[] args) throws Exception {
@@ -47,21 +52,25 @@ public class BrokerStart {
 		
 		//js.addServlet("jsp", new JspServlet(), "*.jsp");
 
-		js.addServlet("User", new DBObjectServlet<UserObject>(props, UserObject.class, "user_id"), "/user/*");
-		js.addServlet("Request", new RequestServlet(props), "/request/*");		
-		js.addServlet("Ontology", new DBObjectServlet<OntologyObject>(props, OntologyObject.class, "ontology_id"), "/ontology/*");		
 		js.addServlet("BulkRequests", new BulkRequestServlet(props), "/bulk-requests");
-		js.addServlet("Requests", new RequestListServlet(props), "/requests");
-		js.addServlet("Users", new DBObjectListServlet<UserObject>(props, UserObject.class), "/users");
-		//js.addServlet("Ontologies", new DBObjectListServlet<Ontology>(props, Ontology.class), "/ontologies");
-		js.addServlet("Ontologies", new OntologyListServlet(props), "/ontologies");
+		js.addServlet("Request", new RequestServlet(props), "/request/*");		
+		
 		js.addServlet("TextQuery", new TextQueryServlet(props), "/query");
 		js.addServlet("States", new RequestStateServlet(), "/states");
 		js.addServlet("Proteins", new BiothesaurusQueryServlet(props), "/proteins/*");
 		js.addServlet("Test", new TestServlet(), "/test/*");
 
-		//js.addServlet("Metadatas", new DBObjectListServlet<Metadata>(props, Metadata.class), "/metadata");
-		//js.addServlet("Metadata", new DBObjectServlet<Metadata>(props, Metadata.class, "metadata_id"), "/metadatum/*");
+		//js.addServlet("Requests", new RequestListServlet(props), "/requests");
+		//js.addServlet("Ontology", new DBObjectServlet<OntologyObject>(props, OntologyObject.class, "ontology_id"), "/ontology/*");		
+		//js.addServlet("Ontologies", new OntologyListServlet(props), "/ontologies");
+		//js.addServlet("User", new DBObjectServlet<UserObject>(props, UserObject.class, "user_id"), "/user/*");
+		//js.addServlet("Users", new DBObjectListServlet<UserObject>(props, UserObject.class), "/users");
+
+		js.addServlet("Requests", new NewRequestListServlet(props), "/requests/*");
+		js.addServlet("Ontology", new NewOntologyServlet(props), "/ontology/*");
+		js.addServlet("Ontologies", new NewOntologyListServlet(props), "/ontologies/*");
+		js.addServlet("User", new NewUserServlet(props), "/user/*");
+		js.addServlet("Users", new NewUserListServlet(props), "/users/*");
 
 		//js.addServlet("IndexCreator", new IndexCreatorServlet(props), "/indexer/*");
 		
