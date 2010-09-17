@@ -7,6 +7,9 @@ import org.sc.probro.exceptions.BrokerException;
 
 public interface Broker {
 	
+	public Ontology checkOntology(UserCredentials creds, String ontologyID) throws BrokerException;
+	public User checkUser(UserCredentials creds, String userID) throws BrokerException;
+	
 	/*
 	 * Annotator Methods
 	 */
@@ -40,9 +43,11 @@ public interface Broker {
 			UserCredentials user, 
 			String ontology) throws BrokerException;
 	
-	public BulkRequestTable listRequests(
+	public BulkRequestTable listRequestsInBulk(
 			UserCredentials user, 
 			String ontology) throws BrokerException;
 	
-	public void respond(UserCredentials user, BulkResponseTable response) throws BrokerException;
+	public void respondInBulk(UserCredentials user, BulkResponseTable response) throws BrokerException;
+	
+	public Request[] listRequests(UserCredentials user, String ontologyID) throws BrokerException;
 }
