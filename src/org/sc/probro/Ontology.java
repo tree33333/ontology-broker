@@ -21,6 +21,8 @@ public class Ontology extends BrokerData {
 		name = obj.getString("name");
 	}
 	
+	public String toString() { return name; }
+	
 	public void stringJSON(JSONStringer obj) throws JSONException { 
 		obj.object();
 		obj.key("name").value(name);

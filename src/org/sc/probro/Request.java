@@ -47,6 +47,8 @@ public class Request extends BrokerData {
 			metadata.add(new Metadata(marray.getJSONObject(i)));
 		}
 	}
+	
+	public String toString() { return id; }
 
 	public void stringJSON(JSONStringer stringer) throws JSONException { 
 		

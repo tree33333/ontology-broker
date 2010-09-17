@@ -19,6 +19,8 @@ public class User extends BrokerData {
 		this.id = id;
 		user_name = obj.getString("user_name");
 	}
+	
+	public String toString() { return user_name; }
 
 	public void stringJSON(JSONStringer obj) throws JSONException { 
 		obj.object();
