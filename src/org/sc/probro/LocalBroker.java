@@ -37,6 +37,48 @@ public class LocalBroker implements Broker {
 		return dateFormat.format(d);
 	}
 	
+	public Ontology checkOntology(UserCredentials creds, String ontologyID) throws BrokerException { 
+		Ontology ont = new Ontology();
+		
+		OntologyObject template = new OntologyObject();
+		template.ontology_id = parseOntologyID(ontologyID);
+		try {
+			OntologyObject obj = model.getModel().loadOnly(OntologyObject.class, template);
+			
+			ont.id = ontologyID;
+			ont.name = obj.name;
+			
+			return ont;
+		
+		} catch (DBModelException e) {
+			throw new BrokerException(e);
+			
+		} catch (DBObjectMissingException e) {
+			throw new GoneException(ontologyID);
+		}
+	}
+	
+	public User checkUser(UserCredentials creds, String userID) throws BrokerException { 
+		User user = new User();
+		
+		UserObject template = new UserObject();
+		template.user_id = parseUserID(userID);
+		try {
+			UserObject obj = model.getModel().loadOnly(UserObject.class, template);
+			
+			user.id = userID;
+			user.user_name = obj.user_name;
+			
+			return user;
+		
+		} catch (DBModelException e) {
+			throw new BrokerException(e);
+			
+		} catch (DBObjectMissingException e) {
+			throw new GoneException(userID);
+		}
+	}
+	
 	public String ontologyURL(int id) { 
 		return url(String.format("/ontology/%d/", id));
 	}
@@ -47,6 +89,12 @@ public class LocalBroker implements Broker {
 	
 	public Integer parseUserID(String url) { 
 		Pattern p = Pattern.compile("^.*/user/([^\\/]+)/.*$");
+		Matcher m = p.matcher(url);
+		return m.matches() ? Integer.parseInt(m.group(1)) : null;
+	}
+	
+	public Integer parseOntologyID(String url) { 
+		Pattern p = Pattern.compile("^.*/ontology/([^\\/]+)/.*$");
 		Matcher m = p.matcher(url);
 		return m.matches() ? Integer.parseInt(m.group(1)) : null;
 	}
@@ -225,9 +273,28 @@ public class LocalBroker implements Broker {
 			throw new InternalServerErrorException(e);
 		}
 	}
+	
+	public Request[] listRequests(UserCredentials user, String ontologyID) throws BrokerException { 
+		try {
+			Collection<RequestObject> reqObjs = model.listLatestRequests();
+			ArrayList<Request> reqs = new ArrayList<Request>();
+			
+			for(RequestObject obj : reqObjs) { 
+				reqs.add(convertRequest(obj));
+			}
+			
+			return reqs.toArray(new Request[0]);
+			
+		} catch (DBModelException e) {
+			throw new BrokerException(e);
+			
+		} catch (DBObjectMissingException e) {
+			throw new GoneException(e.getMessage());
+		}
+	}
 
 	@Override
-	public BulkRequestTable listRequests(UserCredentials user, String ontology)
+	public BulkRequestTable listRequestsInBulk(UserCredentials user, String ontology)
 			throws BrokerException {
 		
 		// TODO : fix me.
@@ -277,7 +344,7 @@ public class LocalBroker implements Broker {
 		}
 	}
 
-	public void respond(UserCredentials user, BulkResponseTable response)
+	public void respondInBulk(UserCredentials user, BulkResponseTable response)
 			throws BrokerException {
 
 		// TODO: fix me.
