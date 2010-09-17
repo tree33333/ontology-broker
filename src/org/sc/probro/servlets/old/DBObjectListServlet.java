@@ -1,4 +1,4 @@
-package org.sc.probro.servlets;
+package org.sc.probro.servlets.old;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -29,13 +29,14 @@ import org.sc.probro.data.DBModelException;
 import org.sc.probro.data.DBObject;
 import org.sc.probro.data.DBObjectModel;
 import org.sc.probro.data.RequestObject;
+import org.sc.probro.servlets.SkeletonDBServlet;
 
 /**
  * Converted to using the Jetty Logging system.
  * Uses the DBObjectModel correctly.
  * 
  * @author tdanford
- *
+ * @deprecated
  * @param <T>
  */
 public class DBObjectListServlet<T extends DBObject> extends SkeletonDBServlet {

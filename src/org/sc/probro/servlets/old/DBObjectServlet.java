@@ -1,4 +1,4 @@
-package org.sc.probro.servlets;
+package org.sc.probro.servlets.old;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -22,6 +22,7 @@ import org.sc.probro.data.DBObjectModel;
 import org.sc.probro.data.MetadataObject;
 import org.sc.probro.data.RequestObject;
 import org.sc.probro.exceptions.BrokerException;
+import org.sc.probro.servlets.SkeletonDBServlet;
 
 import java.sql.*;
 import java.util.regex.*;
@@ -31,7 +32,7 @@ import java.util.*;
  * Updated to use DBObjectModel.
  * 
  * @author tdanford
- *
+ * @deprecated
  * @param <T>
  */
 public class DBObjectServlet<T extends DBObject> extends SkeletonDBServlet {

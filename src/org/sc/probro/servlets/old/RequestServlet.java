@@ -1,4 +1,4 @@
-package org.sc.probro.servlets;
+package org.sc.probro.servlets.old;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -26,11 +26,19 @@ import org.sc.probro.data.MetadataObject;
 import org.sc.probro.data.ProvisionalTermObject;
 import org.sc.probro.data.RequestObject;
 import org.sc.probro.exceptions.BrokerException;
+import org.sc.probro.servlets.SkeletonDBServlet;
 
 import java.sql.*;
 import java.util.regex.*;
 import java.util.*;
 
+/**
+ * 
+ * 
+ * @deprecated
+ * @author tdanford
+ *
+ */
 public class RequestServlet extends SkeletonDBServlet {
 	
 	public RequestServlet(BrokerProperties ps) { 

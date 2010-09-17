@@ -1,4 +1,4 @@
-package org.sc.probro.servlets;
+package org.sc.probro.servlets.old;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -37,6 +37,7 @@ import com.hp.hpl.jena.rdf.model.RDFNode;
 /**
  * Cleared for DBObjectModel usage.
  * 
+ * @deprecated
  * @author tdanford
  */
 public class OntologyListServlet extends DBObjectListServlet<OntologyObject> {

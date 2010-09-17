@@ -1,4 +1,4 @@
-package org.sc.probro.servlets;
+package org.sc.probro.servlets.old;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,10 +26,12 @@ import org.sc.probro.BrokerProperties;
 import org.sc.probro.data.*;
 import org.sc.probro.exceptions.BrokerException;
 import org.sc.probro.lucene.PROIndexer;
+import org.sc.probro.servlets.SkeletonDBServlet;
 
 /**
  * Cleared for DBObjectModel usage.
- * 
+ *
+ * @deprecated
  * @author tdanford
  */
 public class RequestListServlet extends SkeletonDBServlet {
