@@ -172,6 +172,7 @@ public class LocalBroker implements Broker {
 	
 		base.status = RequestStateServlet.STATES.forward(req.status);
 		base.modified_by = parseUserID(req.modified_by.id);
+		base.creator_id = parseUserID(req.creator.id);
 	}
 	
 	private Collection<MetadataObject> unconvertMetadata(Collection<Metadata> metas) throws BadRequestException { 
@@ -310,14 +311,6 @@ public class LocalBroker implements Broker {
 	}
 
 	@Override
-	public BulkRequestTable listRequestsInBulk(UserCredentials user, String ontology)
-			throws BrokerException {
-		
-		// TODO : fix me.
-		throw new UnsupportedOperationException("listRequests");
-	}
-
-	@Override
 	public User[] listUsers(UserCredentials user, String ontology)
 			throws BrokerException {
 		try {
@@ -379,6 +372,13 @@ public class LocalBroker implements Broker {
 		}
 	}
 
+	public BulkRequestTable listRequestsInBulk(UserCredentials user, String ontology)
+			throws BrokerException {
+		
+		// TODO : fix me.
+		throw new UnsupportedOperationException("listRequests");
+	}
+	
 	public void respondInBulk(UserCredentials user, BulkResponseTable response)
 			throws BrokerException {
 
