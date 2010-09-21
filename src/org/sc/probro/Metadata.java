@@ -4,7 +4,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONStringer;
 
-public class Metadata {
+public class Metadata extends ReflectedObject {
 
 	public String key, value;
 	
