@@ -7,6 +7,7 @@ import java.text.SimpleDateFormat;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+
 public class ReflectedObject {
 
 	public Map<String,Field> getFieldMap() { 
@@ -26,6 +27,26 @@ public class ReflectedObject {
 		for(String key : params.keySet()) { 
 			if(fields.containsKey(key) && params.get(key).length > 0) { 
 				setFromString(key, params.get(key)[0]);
+			}
+		}
+	}
+	
+	public void setFromReflectedObject(ReflectedObject obj) {
+		Map<String,Field> otherFields = obj.getFieldMap();
+		Map<String,Field> myFields = getFieldMap();
+		
+		for(String fieldName : otherFields.keySet()) { 
+			if(myFields.containsKey(fieldName) && 
+					isSubclass(otherFields.get(fieldName).getType(),
+							myFields.get(fieldName).getType())) { 
+				try {
+					Object otherValue = otherFields.get(fieldName).get(obj);
+					if(otherValue != null) { 
+						myFields.get(fieldName).set(this, otherValue);
+					}
+				} catch (IllegalAccessException e) {
+					throw new IllegalStateException(e);
+				}
 			}
 		}
 	}
