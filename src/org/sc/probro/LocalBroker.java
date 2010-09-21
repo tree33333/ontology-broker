@@ -1,5 +1,7 @@
 package org.sc.probro;
 
+import java.io.File;
+import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -8,16 +10,22 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.regex.*;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.sc.probro.data.*;
 import org.sc.probro.exceptions.*;
+import org.sc.probro.lucene.ProteinSearcher;
 import org.sc.probro.servlets.RequestStateServlet;
 
 public class LocalBroker implements Broker {
 	
 	private String urlPrefix;
 	private BrokerModel model;
+	private String luceneIndexPath;
 	
-	public LocalBroker(String uprefix, BrokerModel m) {
+	public LocalBroker(BrokerProperties props, String uprefix, BrokerModel m) {
+		luceneIndexPath = props.getLuceneIndex();
 		urlPrefix = uprefix;
 		if(urlPrefix.endsWith("/")) { urlPrefix = urlPrefix.substring(0, urlPrefix.length()-1); }
 		model = m;
@@ -28,6 +36,14 @@ public class LocalBroker implements Broker {
 			return urlPrefix + path;
 		} else { 
 			return urlPrefix + "/" + path;
+		}
+	}
+	
+	public void close() throws BrokerException {
+		try { 
+			model.close();
+		} catch(DBModelException e) { 
+			throw new BrokerException(e);
 		}
 	}
 	
@@ -318,12 +334,31 @@ public class LocalBroker implements Broker {
 		}
 	}
 
-	public SearchResult[] query(UserCredentials user, String search,
+	public SearchResult[] query(UserCredentials user, String query,
 			String... ontologyId) throws BrokerException {
-	
-		// TODO : fix me.
-		// this is handled (at the moment) directly in the Servlet.
-		throw new UnsupportedOperationException("query");
+
+		try { 
+			ProteinSearcher searcher = new ProteinSearcher(new File(luceneIndexPath));
+			try { 
+
+				ArrayList<SearchResult> results = new ArrayList<SearchResult>();
+				JSONArray hits = searcher.evaluate(query);
+				
+				for(int i = 0; i < hits.length(); i++) { 
+					JSONObject obj = hits.getJSONObject(i);
+					SearchResult result = new SearchResult(obj);
+					results.add(result);
+				}
+				
+				return results.toArray(new SearchResult[0]);
+
+			} finally { 
+				searcher.close();
+			}
+			
+		} 	catch (JSONException e) { throw new BrokerException(e); }
+			catch(IOException e) { throw new BrokerException(e); }
+
 	}
 
 	public String request(UserCredentials user, 
