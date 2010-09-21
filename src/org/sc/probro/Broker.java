@@ -7,6 +7,8 @@ import org.sc.probro.exceptions.BrokerException;
 
 public interface Broker {
 	
+	public void close() throws BrokerException;
+	
 	public Ontology checkOntology(UserCredentials creds, String ontologyID) throws BrokerException;
 	public User checkUser(UserCredentials creds, String userID) throws BrokerException;
 	
