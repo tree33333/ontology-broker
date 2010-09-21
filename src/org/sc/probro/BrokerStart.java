@@ -52,20 +52,23 @@ public class BrokerStart {
 		
 		//js.addServlet("jsp", new JspServlet(), "*.jsp");
 
-		js.addServlet("BulkRequests", new BulkRequestServlet(props), "/bulk-requests");
-		js.addServlet("Request", new RequestServlet(props), "/request/*");		
-		
-		js.addServlet("TextQuery", new TextQueryServlet(props), "/query");
+		// These are all remaining the same.
 		js.addServlet("States", new RequestStateServlet(), "/states");
 		js.addServlet("Proteins", new BiothesaurusQueryServlet(props), "/proteins/*");
 		js.addServlet("Test", new TestServlet(), "/test/*");
 
+		// These are the old servlets.
+		//js.addServlet("Request", new RequestServlet(props), "/request/*");		
+		//js.addServlet("TextQuery", new TextQueryServlet(props), "/query");
 		//js.addServlet("Requests", new RequestListServlet(props), "/requests");
 		//js.addServlet("Ontology", new DBObjectServlet<OntologyObject>(props, OntologyObject.class, "ontology_id"), "/ontology/*");		
 		//js.addServlet("Ontologies", new OntologyListServlet(props), "/ontologies");
 		//js.addServlet("User", new DBObjectServlet<UserObject>(props, UserObject.class, "user_id"), "/user/*");
 		//js.addServlet("Users", new DBObjectListServlet<UserObject>(props, UserObject.class), "/users");
 
+		js.addServlet("BulkRequests", new NewBulkRequestServlet(props), "/bulk-requests");
+		js.addServlet("TextQuery", new NewTextQueryServlet(props), "/query");
+		js.addServlet("Request", new NewRequestServlet(props), "/request/*");		
 		js.addServlet("Requests", new NewRequestListServlet(props), "/requests/*");
 		js.addServlet("Ontology", new NewOntologyServlet(props), "/ontology/*");
 		js.addServlet("Ontologies", new NewOntologyListServlet(props), "/ontologies/*");
