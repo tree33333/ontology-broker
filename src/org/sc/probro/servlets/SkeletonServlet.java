@@ -12,6 +12,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Array;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.sql.Connection;
@@ -176,52 +177,65 @@ public abstract class SkeletonServlet extends HttpServlet {
 		return value;
 	}
 	
-	public <T> T getOptionalParam(HttpServletRequest req, String name, Class<T> type) throws BrokerException { 
-		T param = null;
-		
-		String undecoded = req.getParameter(name);
-		if(undecoded != null) { 
-			try {
-				String decoded = URLDecoder.decode(undecoded, "UTF-8");
-				
-				if(DBObject.isSubclass(type, String.class)) { 
-					return (T)decoded;
-					
-				} else if (DBObject.isSubclass(type, Integer.class)) {
-					int parsed = Integer.parseInt(decoded);
-					return (T)(new Integer(parsed));
+	private <T> T decode(String[] undecoded, Class<T> type) throws BrokerException { 
 
-				} else if (DBObject.isSubclass(type, Double.class)) {
-					int parsed = Integer.parseInt(decoded);
-					return (T)(new Integer(parsed));
-
-				} else if (DBObject.isSubclass(type, Boolean.class)) {
-					String lower = decoded.toLowerCase();
-					if(!lower.equals("true") && !lower.equals("1")) { 
-						return (T)(Boolean.FALSE);
-					} else { 
-						return (T)(Boolean.TRUE);						
-					}
-				
-				} else if (DBObject.isSubclass(type, JSONObject.class)) {
-					return (T)(new JSONObject(decoded));
-					
-				} else { 
-					throw new IllegalArgumentException(type.getCanonicalName());
-				}
-			
-			} catch (UnsupportedEncodingException e) {
-				throw new BrokerException(e);
-				
-			} catch(NumberFormatException e) { 
-				throw new BrokerException(HttpServletResponse.SC_BAD_REQUEST, e);
-				
-			} catch (JSONException e) {
-				throw new BrokerException(HttpServletResponse.SC_BAD_REQUEST, e);
+		try {
+			String[] decoded = new String[undecoded.length];
+			for(int i = 0; i < undecoded.length; i++) { 
+				decoded[i] = URLDecoder.decode(undecoded[i], "UTF-8");
 			}
+			
+			if(type.isArray()) {
+				Class inner = type.getComponentType();
+				int len = undecoded.length;
+				Object arrayValue = Array.newInstance(inner, len);
+				for(int i = 0; i < len; i++) { 
+					Array.set(arrayValue, i, decode(new String[] { undecoded[i] }, inner));
+				}
+				return (T)arrayValue;
+
+			} else if(DBObject.isSubclass(type, String.class)) { 
+				return (T)decoded;
+
+			} else if (DBObject.isSubclass(type, Integer.class)) {
+				int parsed = Integer.parseInt(decoded[0]);
+				return (T)(new Integer(parsed));
+
+			} else if (DBObject.isSubclass(type, Double.class)) {
+				int parsed = Integer.parseInt(decoded[0]);
+				return (T)(new Integer(parsed));
+
+			} else if (DBObject.isSubclass(type, Boolean.class)) {
+				String lower = decoded[0].toLowerCase();
+				if(!lower.equals("true") && !lower.equals("1")) { 
+					return (T)(Boolean.FALSE);
+				} else { 
+					return (T)(Boolean.TRUE);						
+				}
+
+			} else if (DBObject.isSubclass(type, JSONObject.class)) {
+				return (T)(new JSONObject(decoded[0]));
+
+			} else { 
+				throw new IllegalArgumentException(type.getCanonicalName());
+			}
+			
+		} catch (UnsupportedEncodingException e) {
+			throw new BrokerException(e);
+		} catch (JSONException e) {
+			throw new BrokerException(e);
 		}
+
+	}
+	
+	public <T> T getOptionalParam(HttpServletRequest req, String name, Class<T> type) throws BrokerException { 
+		String[] undecoded = req.getParameterValues(name);
 		
-		return param;
+		if(undecoded != null) { 
+			return decode(undecoded, type);
+		} else { 
+			return null;
+		}
 	}
 	
 	public static String decodeResponseType(Map<String,String[]> params, String defaultType) { 
