@@ -5,8 +5,6 @@ import java.util.regex.*;
 import java.io.*;
 
 import org.json.*;
-import org.sc.probro.data.MetadataObject;
-import org.sc.probro.data.RequestObject;
 import org.sc.probro.servlets.RequestStateServlet;
 import org.sc.probro.utils.Numbering;
 
@@ -54,48 +52,29 @@ public class BulkRequestTable {
 		"residue#, Modification",
 		"taxon ID",
 		"Organism",
+		
+		// New Fields...
 		"New Status",
 		"Maintainer",
 		"Comment",
 	};
 
 	private static Pattern requestIDPattern = Pattern.compile("http://.*/request/(\\d+)/?.*$");
-	private ArrayList<BulkRequestLine> lines;
+	private ArrayList<BulkLine> lines;
 
 	/**
 	 * Creates an empty table.
 	 */
 	public BulkRequestTable() { 
-		lines = new ArrayList<BulkRequestLine>();
-	}
-	
-	/**
-	 * Creates a table from a string.
-	 * 
-	 * @param str The raw content of the file (e.g. URL-decoded file upload from user). 
-	 * @throws IOException
-	 */
-	public BulkRequestTable(String str) throws IOException { 
-		this(new StringReader(str));
-	}
-	
-	public BulkRequestTable(Reader r) throws IOException { 
-		this();
-		BufferedReader br = new BufferedReader(r);
-		String h = br.readLine();
-		if(!h.startsWith(REQUEST_HEADERS[0])) { 
-			throw new IllegalArgumentException(String.format("Illegal first line: \"%s\"", h));
-		}
-		
-		String line;
-		while((line = br.readLine()) != null) { 
-			BulkRequestLine bulkline = new BulkRequestLine(line);
-			lines.add(bulkline);
-		}
+		lines = new ArrayList<BulkLine>();
 	}
 
 	public int getNumRows() {
 		return lines.size();
+	}
+	
+	protected void addLine(BulkLine line) { 
+		lines.add(line);
 	}
 	
 	/**
@@ -104,11 +83,11 @@ public class BulkRequestTable {
 	 * @param line The index of the row to convert.
 	 * @return
 	 */
-	public RequestObject getRequest(int line) { return lines.get(line).getRequest(); }
+	public Request getRequest(int line) { return lines.get(line).getRequest(); }
 	
 	public int getNewStatus(int line) { return lines.get(line).newStatus(); }
 	
-	public Collection<MetadataObject> getMetadata(int line) { return lines.get(line).getMetadata(); }
+	public Collection<Metadata> getMetadata(int line) { return lines.get(line).getMetadata(); }
 	
 	public void printTable(PrintWriter writer) { 
 		for(int i = 0; i < REQUEST_HEADERS.length; i++) { 
@@ -117,7 +96,7 @@ public class BulkRequestTable {
 		}
 		writer.println();
 		
-		for(BulkRequestLine line : lines) { 
+		for(BulkLine line : lines) { 
 			writer.println(line.toString());
 		}
 	}
@@ -126,24 +105,24 @@ public class BulkRequestTable {
 	 * Represents a single row in either the request or response table.
 	 * 
 	 */
-	public static class BulkRequestLine { 
+	public static class BulkLine { 
 		
 		private String[] data;
 		private ArrayList<String> extra;
 		
-		public BulkRequestLine() { 
+		public BulkLine() { 
 			data = new String[REQUEST_HEADERS.length];
 			extra = new ArrayList<String>();
 			for(int i = 0; i < data.length; i++) { data[i] = ""; }
 		}
 		
-		public BulkRequestLine(RequestObject req, Collection<MetadataObject> mds) { 
+		public BulkLine(Request req, Collection<Metadata> mds) { 
 			this();
 		
 			throw new UnsupportedOperationException("implement me");
 		}
 
-		public BulkRequestLine(String line) {
+		public BulkLine(String line) {
 			this();
 			String[] array = line.split("\t");
 			if(array.length < REQUEST_HEADERS.length) { 
@@ -172,15 +151,26 @@ public class BulkRequestTable {
 			}
 		}
 		
-		public RequestObject getRequest() { 
-			RequestObject req = new RequestObject();
-			req.request_id = requestID();
+		public Request getRequest() { 
+			Request req = new Request();
+
+			//req.request_id = requestID();
+			
+			req.id = data[0];
 			req.search_text = data[2];
+			
+			if(extra.size() >= 3) { 
+				req.status = extra.get(0);
+				req.modified_by = new User(null, extra.get(1));
+				req.comment = extra.get(2);
+			}
+
 			return req;
 		}
 		
-		public Collection<MetadataObject> getMetadata() { 
-			LinkedList<MetadataObject> mds = new LinkedList<MetadataObject>();
+		public Collection<Metadata> getMetadata() { 
+			LinkedList<Metadata> mds = new LinkedList<Metadata>();
+			Request req = getRequest();
 			
 			for(int i = 0; i < METADATA_KEYS.length; i++) { 
 				if(METADATA_KEYS[i] != null && data[i] != null && data[i].length() > 0) { 
@@ -188,10 +178,12 @@ public class BulkRequestTable {
 					Integer reqID = requestID();
 					for(int j = 0; j < valueArray.length; j++) {
 						if(valueArray[j].length() > 0) { 
-							MetadataObject md = new MetadataObject();
-							md.request_id = reqID;
-							md.metadata_key = METADATA_KEYS[i];
-							md.metadata_value = valueArray[j];
+							Metadata md = new Metadata();
+							//md.request_id = reqID;
+							
+							md.key = METADATA_KEYS[i];
+							md.value = valueArray[j];
+							
 							mds.add(md);
 						}
 					}
@@ -210,7 +202,5 @@ public class BulkRequestTable {
 			return sb.toString();
 		}
 	}
-
-
 }
 
