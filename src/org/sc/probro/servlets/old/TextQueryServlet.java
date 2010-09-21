@@ -1,4 +1,4 @@
-package org.sc.probro.servlets;
+package org.sc.probro.servlets.old;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,7 +20,14 @@ import org.json.JSONObject;
 import org.sc.probro.BrokerProperties;
 import org.sc.probro.exceptions.BrokerException;
 import org.sc.probro.lucene.ProteinSearcher;
+import org.sc.probro.servlets.SkeletonServlet;
 
+/**
+ * 
+ * @author tdanford
+ * @deprecated
+ *
+ */
 public class TextQueryServlet extends SkeletonServlet {
 	
 	private String luceneIndexPath;

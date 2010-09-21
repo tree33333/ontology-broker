@@ -1,4 +1,4 @@
-package org.sc.probro.servlets;
+package org.sc.probro.servlets.old;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -16,6 +16,9 @@ import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.util.log.Log;
 import org.sc.probro.BrokerProperties;
 import org.sc.probro.BulkRequestTable;
+import org.sc.probro.BulkResponseTable;
+import org.sc.probro.LocalBroker;
+import org.sc.probro.Metadata;
 import org.sc.probro.data.BrokerModel;
 import org.sc.probro.data.DBModelException;
 import org.sc.probro.data.DBObject;
@@ -24,11 +27,13 @@ import org.sc.probro.data.MetadataObject;
 import org.sc.probro.data.ProvisionalTermObject;
 import org.sc.probro.data.RequestObject;
 import org.sc.probro.exceptions.BrokerException;
+import org.sc.probro.servlets.SkeletonDBServlet;
 
 /**
  * Cleared for BrokerModel usage.
  * 
  * @author tdanford
+ * @deprecated
  *
  */
 public class BulkRequestServlet extends SkeletonDBServlet {
@@ -135,10 +140,12 @@ public class BulkRequestServlet extends SkeletonDBServlet {
 			}
 
 			bulkResponse = URLDecoder.decode(bulkResponse, "UTF-8");
-			BulkRequestTable table = new BulkRequestTable(new StringReader(bulkResponse));
+			BulkResponseTable table = new BulkResponseTable(new StringReader(bulkResponse));
 
 			try { 
 				BrokerModel model = getBrokerModel();
+				LocalBroker broker = new LocalBroker(new BrokerProperties(), null, model);
+				
 				try {
 
 					Map<Integer,String> errorMap = new TreeMap<Integer,String>();
@@ -151,9 +158,17 @@ public class BulkRequestServlet extends SkeletonDBServlet {
 					for(int i = 0; i < table.getNumRows(); i++) {
 						// retrieve the request line from the submitted bulk request table, 
 						// and the corresponding request entry from the database...
-						RequestObject submittedReq = table.getRequest(i);
+						RequestObject submittedReq = new RequestObject(); 
+						submittedReq.setFromReflectedObject(table.getRequest(i));
+						
 						ProvisionalTermObject term = model.getProvisionalTerm(submittedReq.provisional_term); 
-						Collection<MetadataObject> submittedMetadata = table.getMetadata(i);
+						Collection<MetadataObject> submittedMetadata = new LinkedList<MetadataObject>();
+						for(Metadata m : table.getMetadata(i)) {
+							MetadataObject obj = new MetadataObject();
+							obj.setFromReflectedObject(m);
+							submittedMetadata.add(obj);
+						}
+						
 						RequestObject dbReq = model.getLatestRequest(term);
 
 						//... and check to make sure that the bulk request didn't illegaly
