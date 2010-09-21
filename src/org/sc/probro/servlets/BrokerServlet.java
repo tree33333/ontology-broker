@@ -10,14 +10,17 @@ import org.sc.probro.data.DBModelException;
 import org.sc.probro.exceptions.BrokerException;
 
 public class BrokerServlet extends SkeletonDBServlet {
+	
+	private BrokerProperties props;
 
 	public BrokerServlet(BrokerProperties props) {
 		super(props);
+		this.props = props;
 	}
 	
 	public Broker getBroker() throws BrokerException { 
 		try {
-			return new LocalBroker(BrokerStart.getURLPrefix(), getBrokerModel());
+			return new LocalBroker(props, BrokerStart.getURLPrefix(), getBrokerModel());
 		} catch (DBModelException e) {
 			throw new BrokerException(e);
 		}
