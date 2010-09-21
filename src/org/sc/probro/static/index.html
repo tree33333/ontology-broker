@@ -13,20 +13,24 @@ $(document).ready(function() {
 		
 	var fill_requests = function(data) { 
 				$('#datatable').html(data); 
+				/*
 				$('tr.obj_request td.value_provisional_term').each(function(idx) { 
 					var request_url = '/request.html?request=' + $(this).text();
 					var request_uri = '/request/' + $(this).text() + '/' 
 					//var format='?format=html';
 					$(this).html($('<a href="' + request_url + '">' + request_uri + '</a>'));
 				});
+				*/
 				$('td.value_modified_by').each(function(idx) { 
+					var user_href = $(this).find('a').attr('href');
 					var user_id = $(this).text()
-					var user_uri = '/user/' + user_id + '/?format=html';
+					var user_uri = user_href + '?format=html';
 					$(this).html('<a href="' + user_uri + '">' + user_id + '</a>');
 				});
-				$('td.value_creator_id').each(function(idx) { 
+				$('td.value_creator').each(function(idx) { 
+					var user_href = $(this).find('a').attr('href');
 					var user_id = $(this).text()
-					var user_uri = '/user/' + user_id + '/?format=html';
+					var user_uri = user_href + '?format=html';
 					$(this).html('<a href="' + user_uri + '">' + user_id + '</a>');
 				});
 				$('td.value_ontology_id').each(function(idx) { 
@@ -94,7 +98,6 @@ body {
 <div id="debug">
 <!-- <h4>Debug</h4> -->
 </div> 
-
 
 </body>
 

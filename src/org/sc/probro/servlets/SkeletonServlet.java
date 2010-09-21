@@ -195,7 +195,7 @@ public abstract class SkeletonServlet extends HttpServlet {
 				return (T)arrayValue;
 
 			} else if(DBObject.isSubclass(type, String.class)) { 
-				return (T)decoded;
+				return (T)decoded[0];
 
 			} else if (DBObject.isSubclass(type, Integer.class)) {
 				int parsed = Integer.parseInt(decoded[0]);
