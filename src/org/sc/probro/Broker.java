@@ -28,6 +28,7 @@ public interface Broker {
 			String name, 
 			String context, 
 			String provenance, 
+			Ontology ontology,
 			Collection<Metadata> metadatas) throws BrokerException;
 	
 	public void update(UserCredentials user, 
