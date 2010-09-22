@@ -27,6 +27,7 @@ import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.json.JSONWriter;
 import org.sc.probro.BrokerProperties;
+import org.sc.probro.BrokerStart;
 import org.sc.probro.data.BrokerModel;
 import org.sc.probro.data.DBModelException;
 import org.sc.probro.data.DBObjectModel;
@@ -57,6 +58,6 @@ public abstract class SkeletonDBServlet extends SkeletonServlet {
     }
     
     public BrokerModel getBrokerModel() throws DBModelException { 
-    	return new BrokerModel(getDBObjectModel());
+    	return new BrokerModel(BrokerStart.getURLPrefix(), getDBObjectModel());
     }
 }
