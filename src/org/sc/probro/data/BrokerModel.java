@@ -17,10 +17,21 @@ import org.sc.probro.servlets.RequestStateServlet;
 
 public class BrokerModel {
 
+	private String urlPrefix;
 	private DBObjectModel model;
 
-	public BrokerModel(DBObjectModel objModel) { 
+	public BrokerModel(String uprefix, DBObjectModel objModel) {
+		this.urlPrefix = uprefix;
+		if(urlPrefix.endsWith("/")) { urlPrefix = urlPrefix.substring(0, urlPrefix.length()-1); }
 		model = objModel;
+	}
+	
+	public String url(String path) { 
+		if(path.startsWith("/")) { 
+			return urlPrefix + path;
+		} else { 
+			return urlPrefix + "/" + path;
+		}
 	}
 	
 	public DBObjectModel getModel() { return model; }
@@ -209,11 +220,9 @@ public class BrokerModel {
 	}
 
 	public synchronized ProvisionalTermObject createNewRequest(RequestObject req, Collection<MetadataObject> metadatas) throws DBModelException { 
-		ProvisionalTermObject term = new ProvisionalTermObject();
-		term.provisional_term = generateRandomTerm();
-		model.create(ProvisionalTermObject.class, term);
 
-		req.provisional_term = term.provisional_term;
+		req.provisional_term = url(String.format("/request/%s", generateRandomTerm()));
+		
 		model.create(RequestObject.class, req);
 
 		for(MetadataObject md : metadatas) { 
@@ -224,8 +233,11 @@ public class BrokerModel {
 			model.create(MetadataObject.class, md);
 		}
 
+		ProvisionalTermObject term = new ProvisionalTermObject();
+		term.provisional_term = generateRandomTerm();
 		term.request_id = req.request_id;
-		model.update(term);
+
+		model.create(ProvisionalTermObject.class, term);
 
 		return term;
 	}

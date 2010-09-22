@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.LinkedList;
@@ -20,23 +21,12 @@ import org.sc.probro.servlets.RequestStateServlet;
 
 public class LocalBroker implements Broker {
 	
-	private String urlPrefix;
 	private BrokerModel model;
 	private String luceneIndexPath;
 	
-	public LocalBroker(BrokerProperties props, String uprefix, BrokerModel m) {
+	public LocalBroker(BrokerProperties props, BrokerModel m) {
 		luceneIndexPath = props.getLuceneIndex();
-		urlPrefix = uprefix;
-		if(urlPrefix.endsWith("/")) { urlPrefix = urlPrefix.substring(0, urlPrefix.length()-1); }
 		model = m;
-	}
-	
-	public String url(String path) { 
-		if(path.startsWith("/")) { 
-			return urlPrefix + path;
-		} else { 
-			return urlPrefix + "/" + path;
-		}
 	}
 	
 	public void close() throws BrokerException {
@@ -96,23 +86,29 @@ public class LocalBroker implements Broker {
 	}
 	
 	public String ontologyURL(int id) { 
-		return url(String.format("/ontology/%d/", id));
+		return model.url(String.format("/ontology/%d/", id));
 	}
 	
 	public String userURL(int id) { 
-		return url(String.format("/user/%d/", id));
+		return model.url(String.format("/user/%d/", id));
 	}
 	
+	private static Pattern number = Pattern.compile("\\d+");
+	
 	public Integer parseUserID(String url) { 
+		if(number.matcher(url).matches()) { return Integer.parseInt(url); }
 		Pattern p = Pattern.compile("^.*/user/([^\\/]+)/.*$");
 		Matcher m = p.matcher(url);
-		return m.matches() ? Integer.parseInt(m.group(1)) : null;
+		if(!m.matches()) { throw new IllegalArgumentException(url); }
+		return Integer.parseInt(m.group(1));
 	}
 	
 	public Integer parseOntologyID(String url) { 
+		if(number.matcher(url).matches()) { return Integer.parseInt(url); }
 		Pattern p = Pattern.compile("^.*/ontology/([^\\/]+)/.*$");
 		Matcher m = p.matcher(url);
-		return m.matches() ? Integer.parseInt(m.group(1)) : null;
+		if(!m.matches()) { throw new IllegalArgumentException(url); }
+		return Integer.parseInt(m.group(1));
 	}
 	
 	private Ontology loadOntology(int ontology_id) throws DBModelException, DBObjectMissingException { 
@@ -167,7 +163,12 @@ public class LocalBroker implements Broker {
 		try {
 			base.date_submitted = dateFormat.parse(req.date_submitted);
 		} catch (ParseException e) {
-			throw new BadRequestException(e.getMessage());
+			throw new BadRequestException(String.format("Bad date string \"%s\", error message \"%s\"", 
+					String.valueOf(req.date_submitted), e.getMessage()));
+		}
+		
+		if(req.status==null) { 
+			throw new BadRequestException("Request status was not specified.");
 		}
 	
 		base.status = RequestStateServlet.STATES.forward(req.status);
@@ -175,24 +176,27 @@ public class LocalBroker implements Broker {
 		base.creator_id = parseUserID(req.creator.id);
 	}
 	
-	private Collection<MetadataObject> unconvertMetadata(Collection<Metadata> metas) throws BadRequestException { 
-		LinkedList<MetadataObject> list = new LinkedList<MetadataObject>();
+	private Collection<MetadataObject> unconvertMetadata(Collection<Metadata> metas) throws BadRequestException {
+		if(metas == null) { throw new IllegalArgumentException("Null metadata list."); }
 		
+		LinkedList<MetadataObject> list = new LinkedList<MetadataObject>();
+
 		for(Metadata m : metas) { 
 			MetadataObject obj = new MetadataObject();
 
 			obj.metadata_key = m.key;
 			obj.metadata_value = m.value;
 			obj.created_by = parseUserID(m.created_by.id);
-			
+
 			try {
 				obj.created_on = dateFormat.parse(m.created_on);
 			} catch (ParseException e) {
 				throw new BadRequestException(e.getMessage());
 			}
-			
+
 			list.add(obj);
 		}
+
 		return list;
 	}
 	
@@ -355,16 +359,32 @@ public class LocalBroker implements Broker {
 	}
 
 	public String request(UserCredentials user, 
+		
 			String name, 
 			String context, 
-			String provenance, Collection<Metadata> metadatas) throws BrokerException {
+			String provenance,
+			
+			Ontology ontology,
+			
+			Collection<Metadata> metadatas) throws BrokerException {
 		
 		RequestObject reqObj = new RequestObject();
+		
+		reqObj.search_text = name;
+		reqObj.context = context;
+		reqObj.provenance = provenance;
+		reqObj.creator_id = user.getUserID();
+		reqObj.modified_by = user.getUserID();
+		reqObj.date_submitted = Calendar.getInstance().getTime();
+		reqObj.comment = "";
+		reqObj.ontology_id = parseOntologyID(ontology.id);
+		reqObj.status = RequestStateServlet.STATES.forward("PENDING");
+		
 		Collection<MetadataObject> metaObjs = unconvertMetadata(metadatas);
 		
 		try {
 			ProvisionalTermObject termObj = model.createNewRequest(reqObj, metaObjs);
-			
+
 			return termObj.provisional_term;
 			
 		} catch (DBModelException e) {
