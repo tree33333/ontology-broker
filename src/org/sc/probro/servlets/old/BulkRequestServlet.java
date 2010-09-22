@@ -144,7 +144,7 @@ public class BulkRequestServlet extends SkeletonDBServlet {
 
 			try { 
 				BrokerModel model = getBrokerModel();
-				LocalBroker broker = new LocalBroker(new BrokerProperties(), null, model);
+				LocalBroker broker = new LocalBroker(new BrokerProperties(), model);
 				
 				try {
 

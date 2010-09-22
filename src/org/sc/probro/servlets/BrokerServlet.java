@@ -20,7 +20,7 @@ public class BrokerServlet extends SkeletonDBServlet {
 	
 	public Broker getBroker() throws BrokerException { 
 		try {
-			return new LocalBroker(props, BrokerStart.getURLPrefix(), getBrokerModel());
+			return new LocalBroker(props, getBrokerModel());
 		} catch (DBModelException e) {
 			throw new BrokerException(e);
 		}
