@@ -8,6 +8,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.eclipse.jetty.util.log.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONStringer;
@@ -22,14 +23,22 @@ public class NewRequestListServlet extends BrokerServlet {
 
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException { 
 		try { 
-			UserCredentials creds = new UserCredentials();
+			UserCredentials user = new UserCredentials();
 			
 			Broker broker = getBroker();
-	
-			Request req = parseRequest(request);
-			
-			broker.update(creds, request.getRequestURI(), req);
+			try { 
+				Request req = parseRequest(broker, user, request);
+				String term = broker.request(user, req.search_text, req.context, req.provenance, req.ontology, req.metadata);
 
+				Log.info(String.format("Request created %s for (%s,%s,%s,%s)", 
+						term, req.search_text, req.context, req.provenance, req.metadata.toString()));
+
+				response.sendRedirect(term);
+				
+			} finally { 
+				broker.close();
+			}
+			
 		} catch(BrokerException e) { 
 			handleException(response, e);
 		}
@@ -97,22 +106,58 @@ public class NewRequestListServlet extends BrokerServlet {
 		}
 	}
 	
-	public static Request parseRequest(HttpServletRequest httpReq) throws BrokerException { 
+	public static Request parseRequest(Broker broker, UserCredentials user, HttpServletRequest httpReq) throws BrokerException { 
 		String contentType = httpReq.getContentType();
 		if(contentType == null || contentType.equals(CONTENT_TYPE_JSON)) { 
 			return parseRequestFromJSONString(httpReq);
 			
 		} else if (contentType.equals(CONTENT_TYPE_FORM)) { 
-			return parseRequestFromForm(httpReq);
+			return parseRequestFromForm(broker, user, httpReq);
 			
 		} else { 
 			throw new BadRequestException(String.format("Unrecognized Content-Type: %s", String.valueOf(contentType)));
 		}
 	}
 
-	public static Request parseRequestFromForm(HttpServletRequest httpReq) throws BrokerException { 
+	public static Request parseRequestFromForm(Broker broker, UserCredentials user, HttpServletRequest httpReq) throws BrokerException { 
 		Request req = new Request();
-		req.setFromParameters(decodedParams(httpReq));
+		
+		Map<String,String[]> params = decodedParams(httpReq);
+		req.setFromParameters(params);
+
+		Log.info(String.format("Setting up Request from parameters %s", params.keySet().toString()));
+		
+		String creator_id = params.get("creator_id")[0];
+		String modified_by_id = params.get("modified_by")[0];
+		String ontology_id = params.get("ontology_id")[0];
+		
+		req.creator = broker.checkUser(user, creator_id);
+		req.modified_by = broker.checkUser(user, modified_by_id);
+		req.ontology = broker.checkOntology(user, ontology_id);
+		
+		req.metadata = new ArrayList<Metadata>();
+		Pattern metadataPattern = Pattern.compile("metadata_(.*)");
+		
+		for(String key : params.keySet()) { 
+			Matcher metaMatcher = metadataPattern.matcher(key);
+			
+			if(metaMatcher.matches()) { 
+				String kk = metaMatcher.group(1);
+				String vv = params.get(key)[0].trim();
+
+				if(vv.length() > 0) { 
+					Metadata meta = new Metadata();
+
+					meta.key = kk;
+					meta.value = vv;
+					meta.created_by = req.modified_by;
+					meta.created_on = req.date_submitted;
+
+					req.metadata.add(meta); 
+				}
+			}
+		}
+		
 		return req;
 	}
 
