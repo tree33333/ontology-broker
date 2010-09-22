@@ -9,6 +9,21 @@ import java.util.Map;
 
 
 public class ReflectedObject {
+	
+	public String toString() { 
+		StringBuilder sb = new StringBuilder();
+		Map<String,Field> fields = getFieldMap();
+		for(String key : fields.keySet()) { 
+			Field f = fields.get(key);
+			sb.append(sb.length() > 0 ? "|" : "");
+			try {
+				sb.append(String.format("%s=%s", f.getName(), String.valueOf(f.get(this))));
+			} catch (IllegalAccessException e) {
+				throw new IllegalStateException(e);
+			}
+		}
+		return sb.toString();
+	}
 
 	public Map<String,Field> getFieldMap() { 
 		Map<String,Field> map = new LinkedHashMap<String,Field>();
@@ -69,8 +84,14 @@ public class ReflectedObject {
 			} else if (isSubclass(type, java.util.Date.class)) {
 				SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
 				f.set(this, format.parse(value));
-			} else { 
-				throw new UnsupportedOperationException(type.getSimpleName());
+			} else {
+				// Instead of throwing an error, we should do *nothing*
+				// -- this will be handled by the caller instead.
+				/*
+				throw new UnsupportedOperationException(
+						String.format("type %s cannot be set from string value \"%s\"", 
+								type.getName(), value));
+			 	*/
 			}
 			
 		} catch (NoSuchFieldException e) {
