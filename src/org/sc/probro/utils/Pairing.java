@@ -25,8 +25,22 @@ public class Pairing<S,T> {
 	public boolean containsSecondValue(T v) { return tidx.containsKey(v); }
 	
 	public int size() { return s.length; }
-	public T forward(S s) { return t[sidx.get(s)]; }
-	public S backward(T t) { return s[tidx.get(t)]; }
+	
+	public T forward(S s) {
+		if(!sidx.containsKey(s)) { 
+			throw new IllegalArgumentException(String.format("%s not in %s", String.valueOf(s), sidx.keySet().toString()));
+		}
+		Integer i = sidx.get(s);
+		return t[i];
+	}
+	
+	public S backward(T t) {
+		if(!tidx.containsKey(t)) { 
+			throw new IllegalArgumentException(String.format("%s not in %s", String.valueOf(t), tidx.keySet().toString()));
+		}
+		Integer i = tidx.get(t);
+		return s[i]; 
+	}
 	
 	public int firstIndex(S s) { return sidx.get(s); }
 	public int secondIndex(T t) { return tidx.get(s); }
