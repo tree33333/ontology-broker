@@ -29,12 +29,19 @@ public class NewOntologyListServlet extends BrokerServlet {
 			Ontology[] onts = broker.listOntologies(creds);
 
 			if(contentType.equals(CONTENT_TYPE_JSON)) { 
-				JSONStringer stringer = new JSONStringer();			
+				JSONStringer stringer = new JSONStringer();
+				
 				try { 
+					stringer.object();
+
+					stringer.key("vals");
 					BrokerData.stringJSONArray(stringer, onts);
+
+					stringer.endObject();
 				} catch(JSONException e) { 
 					throw new BrokerException(e);
 				}
+				
 				content = stringer.toString(); 
 
 			} else if (contentType.equals(CONTENT_TYPE_HTML)) { 
