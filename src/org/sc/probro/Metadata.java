@@ -26,9 +26,11 @@ public class Metadata extends ReflectedObject {
 		
 		obj.key("metadata_key").value(key);
 		obj.key("metadata_value").value(value);
-		obj.key("created_by").value(created_by);
-		obj.key("created_on");
+		
+		obj.key("created_by");
 		created_by.stringJSONLink(obj);
+		
+		obj.key("created_on").value(created_on);
 
 		obj.endObject();		
 	}

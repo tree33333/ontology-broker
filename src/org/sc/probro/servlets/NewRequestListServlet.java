@@ -70,7 +70,12 @@ public class NewRequestListServlet extends BrokerServlet {
 	public static String formatRequestsAsJSON(Request[] reqs) throws BrokerException {
 		JSONStringer stringer = new JSONStringer();			
 		try { 
+			stringer.object();
+			
+			stringer.key("vals");
 			BrokerData.stringJSONArray(stringer, reqs);
+			
+			stringer.endObject();
 		} catch(JSONException e) { 
 			throw new BrokerException(e);
 		}

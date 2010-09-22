@@ -5,24 +5,49 @@
    
    properties : { 
 
-    provisional_term : "string",
-    ontology_term : "string",
-       
-    search_text : "string",
-    context : "string", 
-    provenance : "string",
-    comment : "string",
-    status : "string",
-
+    provisional_term : { 
+        type : "string",
+    },
     
+    ontology_term : { 
+        type : "string",
+        optional : true,
+    },
+       
+    search_text : { 
+        type : "string", 
+    },
+    
+    context : { 
+        type : "string", 
+    },
+    
+    provenance : { 
+        type : "string",
+        optional : true,
+    },
+    
+    comment : { 
+        type : "string",
+        optional : true,
+    },
+    
+    status : { 
+        type : "string",
+    },
+
     creator : { 
         type : "Link",
         description : "A reference to the creator of this request.",
     },
     
-    modified_by : "Link",
+    modified_by : { 
+        type : "Link",
+    },
     
-    date_submitted : "string",
+    date_submitted : { 
+        type : "string",
+    },
      
      ontology : { 
         type : "Link",
