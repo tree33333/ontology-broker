@@ -1,12 +1,17 @@
- { 
-   name: "User", 
-   type: "object",
+{ 
+    name: "User", 
+    type: "object",
    
-   properties: {
+    properties: {
      
-     user_name : {
-       type : "string", 
-       description : "Human-readable User Name"
-     }
-   }
- }
+        user_name : {
+            type : "string", 
+            description : "Human-readable User Name"
+        },
+     
+        href : { 
+            type : "Link",
+            description : "Link to User entry", 
+        },
+    }
+}

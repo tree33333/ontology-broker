@@ -29,7 +29,8 @@ public class User extends BrokerData {
 
 	public void stringJSON(JSONStringer obj) throws JSONException { 
 		obj.object();
-		obj.key("user_name").value(user_name);			
+		obj.key("user_name").value(user_name);	
+		obj.key("href"); stringJSONLink(obj);
 		obj.endObject();		
 	}
 	

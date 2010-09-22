@@ -33,7 +33,13 @@ public class NewUserListServlet extends BrokerServlet {
 			if(contentType.equals(CONTENT_TYPE_JSON)) { 
 				JSONStringer stringer = new JSONStringer();			
 				try { 
+					stringer.object();
+					stringer.key("vals");
+					
 					BrokerData.stringJSONArray(stringer, users);
+					
+					stringer.endObject();
+					
 				} catch(JSONException e) { 
 					throw new BrokerException(e);
 				}
