@@ -18,6 +18,7 @@ public class Request extends BrokerData {
 	public String context;
 	public String comment;
 	public String status;
+	public String provenance;
 	
 	public User creator;
 	public User modified_by;
@@ -34,6 +35,7 @@ public class Request extends BrokerData {
 		context = obj.getString("context");
 		comment = obj.getString("comment");
 		status = obj.getString("status");
+		provenance = obj.getString("provenance");
 		date_submitted = obj.getString("date_submitted");
 		
 		creator = new User(obj.getJSONObject("creator"));
@@ -59,6 +61,7 @@ public class Request extends BrokerData {
 		stringer.key("search_text").value(search_text);
 		stringer.key("context").value(context);
 		stringer.key("comment").value(comment);
+		stringer.key("provenance").value(provenance);
 		stringer.key("status").value(status);
 		
 		stringer.key("creator");
