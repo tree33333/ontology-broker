@@ -9,6 +9,7 @@
 
 <script type="text/javascript">
 $(document).ready(function() { 
+	$('#admin').load('/admin/');
 });
 </script>
 
@@ -20,6 +21,9 @@ body {
 
 </head>
 <body>
+
+<div id="admin">
+</div>
 
 <div id="reset">
 	<form id="resetform" action="/reset/" method="POST">

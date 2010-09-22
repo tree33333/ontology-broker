@@ -62,6 +62,8 @@ $(document).ready(function() {
 	var params = get_params();
 	if(params['request_id']) { 
 		load_request(params['request_id']);
+	} else { 
+		$('#tdoptional').append('<input type="hidden" name="status" value="PENDING" />');
 	}
 });
 </script>
