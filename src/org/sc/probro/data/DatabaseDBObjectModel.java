@@ -204,6 +204,9 @@ public class DatabaseDBObjectModel implements DBObjectModel {
 					obj.prepareSQLInsertFieldsClause(),
 					obj.prepareSQLInsertValuesClause()); 
 			
+			Log.info(insertStatement);
+			Log.info(obj.toString());
+			
 			Preparation prep = new Preparation(
 					cxn.prepareStatement(insertStatement, 
 							Statement.RETURN_GENERATED_KEYS),
