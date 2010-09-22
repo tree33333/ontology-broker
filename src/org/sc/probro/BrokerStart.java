@@ -57,6 +57,7 @@ public class BrokerStart {
 		js.addServlet("Proteins", new BiothesaurusQueryServlet(props), "/proteins/*");
 		js.addServlet("Test", new TestServlet(), "/test/*");
 		js.addServlet("Reset", new ResetServlet(props), "/reset/*");
+		js.addServlet("Admin", new AdminServlet(props), "/admin/*");
 
 		// These are the old servlets.
 		//js.addServlet("Request", new RequestServlet(props), "/request/*");		
