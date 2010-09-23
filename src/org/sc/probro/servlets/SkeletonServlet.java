@@ -4,6 +4,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.*;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -40,10 +41,19 @@ import org.sc.probro.data.DBObject;
 import org.sc.probro.data.RequestObject;
 import org.sc.probro.exceptions.BrokerException;
 
+import tdanford.json.schema.SchemaEnv;
+
 public abstract class SkeletonServlet extends HttpServlet {
+	
+	protected SchemaEnv schemaEnv;
 	
 	public SkeletonServlet() {
     	
+    }
+	
+    public void init() throws ServletException {
+    	super.init();
+    	schemaEnv = new SchemaEnv(new File("docs/json-schemas"));
     }
 	
 	public static final String CONTENT_TYPE_JSON = "application/json";
