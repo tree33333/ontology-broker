@@ -3,7 +3,7 @@ package org.sc.probro;
 import java.util.*;
 import org.json.*;
 
-public class SearchResult extends BrokerData{
+public class SearchResult extends BrokerData {
 
 	public String id;
 	public String response_type;
@@ -14,7 +14,7 @@ public class SearchResult extends BrokerData{
 	
 	public SearchResult(JSONObject obj) throws JSONException { 
 		id = obj.getString("id");
-		response_type = obj.getString("response_type");
+		response_type = obj.getString("type");
 		description = new ArrayList<String>();
 		accession = new ArrayList<String>();
 				
@@ -22,10 +22,12 @@ public class SearchResult extends BrokerData{
 		for(int i = 0; i < array.length(); i++) { 
 			description.add(array.getString(i));
 		}
-		
-		array = obj.getJSONArray("accession");
-		for(int i = 0; i < array.length(); i++) { 
-			accession.add(array.getString(i));
+
+		if(obj.has("accession")) { 
+			array = obj.getJSONArray("accession");
+			for(int i = 0; i < array.length(); i++) { 
+				accession.add(array.getString(i));
+			}
 		}
 	}
 

@@ -8,7 +8,9 @@ import java.util.regex.*;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpUtils;
 
+import org.eclipse.jetty.util.log.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONStringer;
@@ -24,7 +26,7 @@ public class NewRequestServlet extends BrokerServlet {
 	
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException { 
 		try { 
-			UserCredentials creds = new UserCredentials();
+			UserCredentials user = new UserCredentials();
 
 			String contentType = getContentType(request);
 			String content = null;
@@ -44,7 +46,7 @@ public class NewRequestServlet extends BrokerServlet {
 						sb.append((char)read);
 					}
 					content = sb.toString();
-					req.setFromJSON(new JSONObject(content));
+					req.setFromJSON(new JSONObject(content), broker, user);
 
 				} else if (contentType.equals(CONTENT_TYPE_FORM)) {
 					Map<String,String[]> params = decodedParams(request);
@@ -54,7 +56,7 @@ public class NewRequestServlet extends BrokerServlet {
 					throw new BadRequestException(String.format("Illegal POST content type: %s", contentType));
 				}
 				
-				broker.update(creds, requestID, req);
+				broker.update(user, requestID, req);
 
 			} catch (JSONException e) {
 				throw new BadRequestException(content);
@@ -77,6 +79,8 @@ public class NewRequestServlet extends BrokerServlet {
 			String content = null;
 
 			String requestID = request.getRequestURI();
+			Log.info(String.format("Request for \"%s\"", requestID));
+			
 			Request req = null;
 
 			Broker broker = getBroker();

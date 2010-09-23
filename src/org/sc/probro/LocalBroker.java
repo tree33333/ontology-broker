@@ -183,15 +183,23 @@ public class LocalBroker implements Broker {
 
 		for(Metadata m : metas) { 
 			MetadataObject obj = new MetadataObject();
+			
+			if(m.key == null) { throw new BadRequestException("Metadata.key == null"); }
+			if(m.value == null) { throw new BadRequestException("Metadata.value == null"); }
 
 			obj.metadata_key = m.key;
 			obj.metadata_value = m.value;
-			obj.created_by = parseUserID(m.created_by.id);
 
-			try {
-				obj.created_on = dateFormat.parse(m.created_on);
-			} catch (ParseException e) {
-				throw new BadRequestException(e.getMessage());
+			if(m.created_by != null) { 
+				obj.created_by = parseUserID(m.created_by.id);
+			}
+
+			if(m.created_on != null) { 
+				try {
+					obj.created_on = dateFormat.parse(m.created_on);
+				} catch (ParseException e) {
+					throw new BadRequestException(e.getMessage());
+				}
 			}
 
 			list.add(obj);
@@ -376,7 +384,6 @@ public class LocalBroker implements Broker {
 		reqObj.creator_id = user.getUserID();
 		reqObj.modified_by = user.getUserID();
 		reqObj.date_submitted = Calendar.getInstance().getTime();
-		reqObj.comment = "";
 		reqObj.ontology_id = parseOntologyID(ontology.id);
 		reqObj.status = RequestStateServlet.STATES.forward("PENDING");
 		

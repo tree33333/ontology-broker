@@ -1,10 +1,13 @@
 package org.sc.probro;
 
+import org.eclipse.jetty.util.log.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONStringer;
+import org.sc.probro.exceptions.BadRequestException;
+import org.sc.probro.exceptions.BrokerException;
 
-public class Metadata extends ReflectedObject {
+public class Metadata extends BrokerData {
 
 	public String key, value;
 	
@@ -35,6 +38,23 @@ public class Metadata extends ReflectedObject {
 		obj.endObject();		
 	}
 	
-
-
+	public void setFromJSON(JSONObject obj, Broker broker, UserCredentials user) throws BrokerException { 
+		super.setFromJSON(obj, broker, user);
+		try { 
+			if(obj.has("metadata_key")) { 
+				key = obj.getString("metadata_key");
+			}
+			if(obj.has("metadata_value")) { 
+				value = obj.getString("metadata_value");
+			}
+			
+			if(key == null || value == null) {
+				BadRequestException except = new BadRequestException(obj.toString());
+				Log.warn(except);
+				throw except;
+			}
+		} catch(JSONException e) { 
+			throw new BrokerException(e);
+		}
+	}
 }

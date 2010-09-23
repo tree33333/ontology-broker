@@ -9,11 +9,14 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.eclipse.jetty.util.log.Log;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONStringer;
 import org.sc.probro.*;
 import org.sc.probro.exceptions.*;
+
+import tdanford.json.schema.JSONType;
 
 public class NewRequestListServlet extends BrokerServlet {
 
@@ -32,9 +35,18 @@ public class NewRequestListServlet extends BrokerServlet {
 
 				Log.info(String.format("Request created %s for (%s,%s,%s,%s)", 
 						term, req.search_text, req.context, req.provenance, req.metadata.toString()));
-
-				response.sendRedirect(term);
 				
+				JSONObject obj = new JSONObject();
+				obj.put("term", term);
+
+				//response.sendRedirect(term);
+				
+				response.setStatus(HttpServletResponse.SC_OK);
+				response.setContentType(CONTENT_TYPE_JSON);
+				response.getWriter().println(obj.toString());
+				
+			} catch (JSONException e) {
+				throw new BrokerException(e);
 			} finally { 
 				broker.close();
 			}
@@ -111,10 +123,12 @@ public class NewRequestListServlet extends BrokerServlet {
 		}
 	}
 	
-	public static Request parseRequest(Broker broker, UserCredentials user, HttpServletRequest httpReq) throws BrokerException { 
+	public Request parseRequest(Broker broker, UserCredentials user, HttpServletRequest httpReq) throws BrokerException { 
 		String contentType = httpReq.getContentType();
+		Log.info(String.format("Parsing request from content-type %s", contentType));
+		
 		if(contentType == null || contentType.equals(CONTENT_TYPE_JSON)) { 
-			return parseRequestFromJSONString(httpReq);
+			return parseRequestFromJSONString(broker, user, httpReq);
 			
 		} else if (contentType.equals(CONTENT_TYPE_FORM)) { 
 			return parseRequestFromForm(broker, user, httpReq);
@@ -130,8 +144,19 @@ public class NewRequestListServlet extends BrokerServlet {
 		Map<String,String[]> params = decodedParams(httpReq);
 		req.setFromParameters(params);
 
+		if(!params.containsKey("creator_id")) { 
+			throw new BadRequestException("Illegal Request: no creator_id specified.");
+		}
+		if(!params.containsKey("modified_by")) { 
+			throw new BadRequestException("Illegal Request: no modified_by specified.");
+		}
+		if(!params.containsKey("ontology_id")) { 
+			throw new BadRequestException("Illegal Request: no ontology_id specified.");
+		}
+
 		Log.info(String.format("Setting up Request from parameters %s", params.keySet().toString()));
 		
+
 		String creator_id = params.get("creator_id")[0];
 		String modified_by_id = params.get("modified_by")[0];
 		String ontology_id = params.get("ontology_id")[0];
@@ -166,7 +191,7 @@ public class NewRequestListServlet extends BrokerServlet {
 		return req;
 	}
 
-	public static Request parseRequestFromJSONString(HttpServletRequest httpReq) throws BrokerException { 
+	public Request parseRequestFromJSONString(Broker broker, UserCredentials user, HttpServletRequest httpReq) throws BrokerException { 
 		Request req = new Request();
 		StringBuilder sb = new StringBuilder();
 		try { 
@@ -175,8 +200,30 @@ public class NewRequestListServlet extends BrokerServlet {
 			while((rchar = r.read()) != -1) { 
 				sb.append((char)rchar);
 			}
+			
 			JSONObject obj = new JSONObject(sb.toString());
-			req.setFromJSON(obj);
+			
+			JSONType requestType = schemaEnv.lookupType("NewRequest");
+			if(!requestType.contains(obj)) { 
+				BadRequestException exception = new BadRequestException(requestType.explain(obj));
+				//Log.warn(exception);
+				throw exception;
+			}
+			
+			req.setFromJSON(obj, broker, user);
+			
+			req.metadata = new ArrayList<Metadata>();
+			
+			JSONArray metadataArray = obj.getJSONArray("metadata");
+			for(int i = 0; i < metadataArray.length(); i++) { 
+				JSONObject metaObj = metadataArray.getJSONObject(i);
+				
+				Metadata meta = new Metadata();
+				meta.setFromJSON(metaObj, broker, user);
+				
+				req.metadata.add(meta);
+			}			
+		
 		} catch(IOException e) { 
 			throw new BrokerException(e);
 		} catch (JSONException e) {

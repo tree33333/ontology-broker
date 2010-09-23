@@ -221,7 +221,8 @@ public class BrokerModel {
 
 	public synchronized ProvisionalTermObject createNewRequest(RequestObject req, Collection<MetadataObject> metadatas) throws DBModelException { 
 
-		req.provisional_term = url(String.format("/request/%s", generateRandomTerm()));
+		//req.provisional_term = url(String.format("/request/%s", generateRandomTerm()));
+		req.provisional_term = String.format("/request/%s", generateRandomTerm());
 		
 		model.create(RequestObject.class, req);
 
@@ -234,7 +235,7 @@ public class BrokerModel {
 		}
 
 		ProvisionalTermObject term = new ProvisionalTermObject();
-		term.provisional_term = generateRandomTerm();
+		term.provisional_term = req.provisional_term;
 		term.request_id = req.request_id;
 
 		model.create(ProvisionalTermObject.class, term);

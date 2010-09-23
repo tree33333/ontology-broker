@@ -5,6 +5,7 @@ import java.lang.reflect.*;
 
 import org.json.*;
 import org.sc.probro.data.DBObject;
+import org.sc.probro.exceptions.BrokerException;
 
 public abstract class BrokerData extends ReflectedObject implements JSONString {
 	
@@ -120,11 +121,44 @@ public abstract class BrokerData extends ReflectedObject implements JSONString {
 		return html.toString();
 	}
 
-	public void setFromJSON(JSONObject obj) { 
+	public void setFromJSON(JSONObject obj, Broker broker, UserCredentials user) throws BrokerException { 
 		
+		Map<String,Field> fields = getFieldMap();
+		for(String fieldName : fields.keySet()) { 
+			Field field = fields.get(fieldName);
+			Class type = field.getType();
+
+			try { 
+				if(obj.has(fieldName)) { 
+					if(isSubclass(type, BrokerData.class)) {
+						
+						if(isSubclass(type, User.class)) { 
+							field.set(this, broker.checkUser(user, obj.get(fieldName).toString()));
+							
+						} else if (isSubclass(type, Ontology.class)) { 
+							field.set(this, broker.checkOntology(user, obj.get(fieldName).toString()));
+							
+						} else { 
+							throw new IllegalArgumentException(String.format(
+									"Unsupported type %s for field %s in %s in setFromJSON()",
+									type.getSimpleName(), fieldName, getClass().getSimpleName()));
+						}
+
+					} else { 
+						Object value = obj.get(fieldName);
+						String valString = value != null ? value.toString() : null;
+						setFromString(fieldName, valString);
+					}
+				}
+			} catch(JSONException e) { 
+				throw new IllegalArgumentException(e);
+			} catch (IllegalAccessException e) {
+				throw new BrokerException(e);
+			}
+		}
 	}
 	
 	public void setFromRequestParameters(Map<String,String[]> params) { 
-		
+		throw new UnsupportedOperationException("BrokerData.setFromRequestParameters");
 	}
 }
