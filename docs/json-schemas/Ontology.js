@@ -12,5 +12,11 @@
         type : "Link",
         description : "Link to Ontology entry on broker",
      },
+     
+     
+    maintainer : { 
+        type : "Link",
+        description : "A reference to the maintainer of this ontology.",
+    },
    }
  }

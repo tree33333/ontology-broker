@@ -8,6 +8,7 @@ public class Ontology extends BrokerData {
 
 	public String id; 
 	public String ontology_name;
+	public User maintainer;
 	
 	public Ontology() { }
 	
@@ -19,14 +20,18 @@ public class Ontology extends BrokerData {
 	public Ontology(String id, JSONObject obj) throws JSONException { 
 		this.id = id;
 		ontology_name = obj.getString("ontology_name");
+		maintainer = new User(obj.getJSONObject("maintainer"));
 	}
 	
 	public String toString() { return ontology_name; }
 	
 	public void stringJSON(JSONStringer obj) throws JSONException { 
 		obj.object();
+		
 		obj.key("ontology_name").value(ontology_name);
 		obj.key("href"); stringJSONLink(obj);
+		obj.key("maintainer"); maintainer.stringJSONLink(obj);
+		
 		obj.endObject();		
 	}
 	

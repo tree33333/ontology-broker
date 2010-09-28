@@ -12,6 +12,7 @@ public class OntologyObject extends DBObject {
 	
 	public Integer ontology_id;
 	public String ontology_name; 
+	public Integer maintainer_id;
 	
 	public OntologyObject() { super(); }
 	public OntologyObject(ResultSet rs) throws SQLException { super(rs); }
