@@ -340,7 +340,7 @@ public class LocalBroker implements Broker {
 	}
 
 	public SearchResult[] query(UserCredentials user, String query,
-			String... ontologyId) throws BrokerException {
+			String... ontologyId) throws BrokerException, GoneException {
 
 		try { 
 			ProteinSearcher searcher = new ProteinSearcher(new File(luceneIndexPath));
