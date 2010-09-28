@@ -51,10 +51,7 @@ public class LocalBroker implements Broker {
 		try {
 			OntologyObject obj = model.getModel().loadOnly(OntologyObject.class, template);
 			
-			ont.id = ontologyID;
-			ont.ontology_name = obj.ontology_name;
-			
-			return ont;
+			return convertOntology(obj);
 		
 		} catch (DBModelException e) {
 			throw new BrokerException(e);
@@ -71,11 +68,8 @@ public class LocalBroker implements Broker {
 		template.user_id = parseUserID(userID);
 		try {
 			UserObject obj = model.getModel().loadOnly(UserObject.class, template);
-			
-			user.id = userID;
-			user.user_name = obj.user_name;
-			
-			return user;
+
+			return convertUser(obj);
 		
 		} catch (DBModelException e) {
 			throw new BrokerException(e);
