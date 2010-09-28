@@ -7,25 +7,25 @@ import org.json.JSONStringer;
 public class Ontology extends BrokerData {
 
 	public String id; 
-	public String name;
+	public String ontology_name;
 	
 	public Ontology() { }
 	
 	public Ontology(JSONObject obj) throws JSONException { 
 		id = obj.getString("href");
-		name = obj.getString("text");
+		ontology_name = obj.getString("text");
 	}
 	
 	public Ontology(String id, JSONObject obj) throws JSONException { 
 		this.id = id;
-		name = obj.getString("name");
+		ontology_name = obj.getString("ontology_name");
 	}
 	
-	public String toString() { return name; }
+	public String toString() { return ontology_name; }
 	
 	public void stringJSON(JSONStringer obj) throws JSONException { 
 		obj.object();
-		obj.key("name").value(name);
+		obj.key("ontology_name").value(ontology_name);
 		obj.key("href"); stringJSONLink(obj);
 		obj.endObject();		
 	}
@@ -33,7 +33,7 @@ public class Ontology extends BrokerData {
 	public void stringJSONLink(JSONStringer obj) throws JSONException { 
 		obj.object()
 			.key("href").value(id)
-			.key("text").value(name)
+			.key("text").value(ontology_name)
 			.endObject();
 	}
 }

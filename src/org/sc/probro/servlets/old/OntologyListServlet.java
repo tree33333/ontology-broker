@@ -159,7 +159,7 @@ public class OntologyListServlet extends DBObjectListServlet<OntologyObject> {
 				DBObjectModel model = getDBObjectModel();
 				try { 
 					OntologyObject template = new OntologyObject();
-					template.name = ontologyName;
+					template.ontology_name = ontologyName;
 
 					if(model.count(OntologyObject.class, template) > 0) { 
 						throw new BrokerException(HttpServletResponse.SC_CONFLICT,

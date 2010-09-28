@@ -52,7 +52,7 @@ public class LocalBroker implements Broker {
 			OntologyObject obj = model.getModel().loadOnly(OntologyObject.class, template);
 			
 			ont.id = ontologyID;
-			ont.name = obj.name;
+			ont.ontology_name = obj.ontology_name;
 			
 			return ont;
 		
@@ -121,7 +121,7 @@ public class LocalBroker implements Broker {
 	private Ontology convertOntology(OntologyObject ontObj) { 
 		Ontology ont = new Ontology();
 		ont.id = ontologyURL(ontObj.ontology_id);
-		ont.name = ontObj.name;
+		ont.ontology_name = ontObj.ontology_name;
 		return ont;
 	}
 	

@@ -11,7 +11,7 @@ import org.sc.probro.data.DBObject;
 public class OntologyObject extends DBObject {
 	
 	public Integer ontology_id;
-	public String name; 
+	public String ontology_name; 
 	
 	public OntologyObject() { super(); }
 	public OntologyObject(ResultSet rs) throws SQLException { super(rs); }
