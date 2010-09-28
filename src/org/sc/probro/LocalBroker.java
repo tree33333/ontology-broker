@@ -118,10 +118,23 @@ public class LocalBroker implements Broker {
 		return convertOntology(db.loadOnly(OntologyObject.class, template));
 	}
 	
-	private Ontology convertOntology(OntologyObject ontObj) { 
+	private Ontology convertOntology(OntologyObject ontObj) throws DBModelException, DBObjectMissingException { 
 		Ontology ont = new Ontology();
+		
+		DBObjectModel db = model.getModel();
+		
 		ont.id = ontologyURL(ontObj.ontology_id);
 		ont.ontology_name = ontObj.ontology_name;
+		ont.maintainer = loadUser(ontObj.maintainer_id);
+		
+		ont.fields = new ArrayList<OntologyField>();
+		OntologyFieldObject template = new OntologyFieldObject();
+		template.ontology_id = ontObj.ontology_id;
+		
+		for(OntologyFieldObject fieldObj : db.load(OntologyFieldObject.class, template)) {  
+			ont.fields.add(convertOntologyField(fieldObj));
+		}
+		
 		return ont;
 	}
 	
@@ -152,6 +165,16 @@ public class LocalBroker implements Broker {
 		meta.key = metaObj.metadata_key;
 		meta.value = metaObj.metadata_value;
 		return meta;
+	}
+	
+	private OntologyField convertOntologyField(OntologyFieldObject obj) { 
+		OntologyField field = new OntologyField();
+		
+		field.description = obj.field_description;
+		field.name = obj.field_name;
+		field.metadata_key = obj.field_metadata_key;
+		
+		return field;
 	}
 	
 	private void unconvertRequest(RequestObject base, Request req) throws BadRequestException {
@@ -300,6 +323,8 @@ public class LocalBroker implements Broker {
 			
 		} catch (DBModelException e) {
 			throw new InternalServerErrorException(e);
+		} catch (DBObjectMissingException e) {
+			throw new GoneException(e.getMessage());
 		}
 	}
 	
@@ -413,6 +438,9 @@ public class LocalBroker implements Broker {
 		throw new UnsupportedOperationException("respond");
 	}
 
+	/**
+	 * @inheritDocs
+	 */
 	public void update(UserCredentials user, String request, Request requestData)
 			throws BrokerException {
 		
