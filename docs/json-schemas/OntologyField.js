@@ -18,11 +18,5 @@
        type : "string", 
        description : ""
      },
-     
-
-    ontology : { 
-        type : "Link",
-        description : "A reference to ontology for which this is a field.",
-    },
    }
  }
