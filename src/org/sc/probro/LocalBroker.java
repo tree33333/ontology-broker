@@ -418,14 +418,21 @@ public class LocalBroker implements Broker {
 		}
 	}
 
-	public BulkRequestTable listRequestsInBulk(UserCredentials user, String ontology)
+	public BulkTable listRequestsInBulk(UserCredentials user, String ontology)
 			throws BrokerException {
+
+		Ontology ont = checkOntology(user, ontology);
+		BulkTable table = new BulkTable(ont);
 		
-		// TODO : fix me.
-		throw new UnsupportedOperationException("listRequests");
+		Request[] reqs = listRequests(user, ontology);
+		for(Request req : reqs) { 
+			table.addRequest(req);
+		}
+		
+		return table;
 	}
 	
-	public void respondInBulk(UserCredentials user, BulkResponseTable response)
+	public void respondInBulk(UserCredentials user, BulkTable response)
 			throws BrokerException {
 
 		// TODO: fix me.

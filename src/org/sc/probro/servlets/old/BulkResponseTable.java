@@ -1,10 +1,11 @@
-package org.sc.probro;
+package org.sc.probro.servlets.old;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 
+@Deprecated
 public class BulkResponseTable extends BulkRequestTable {
 
 	public BulkResponseTable(Reader r) throws IOException { 

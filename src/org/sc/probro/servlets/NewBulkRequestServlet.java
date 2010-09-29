@@ -16,9 +16,9 @@ import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.util.log.Log;
 import org.sc.probro.Broker;
 import org.sc.probro.BrokerProperties;
-import org.sc.probro.BulkRequestTable;
-import org.sc.probro.BulkResponseTable;
+import org.sc.probro.BulkTable;
 import org.sc.probro.Metadata;
+import org.sc.probro.Ontology;
 import org.sc.probro.Request;
 import org.sc.probro.UserCredentials;
 import org.sc.probro.data.BrokerModel;
@@ -29,6 +29,8 @@ import org.sc.probro.data.MetadataObject;
 import org.sc.probro.data.ProvisionalTermObject;
 import org.sc.probro.data.RequestObject;
 import org.sc.probro.exceptions.BrokerException;
+import org.sc.probro.servlets.old.BulkRequestTable;
+import org.sc.probro.servlets.old.BulkResponseTable;
 
 /**
  * Cleared for BrokerModel usage.
@@ -51,7 +53,7 @@ public class NewBulkRequestServlet extends BrokerServlet {
 			
 			Broker broker = getBroker();
 			try {
-				BulkRequestTable table = broker.listRequestsInBulk(user, ontology_id);
+				BulkTable table = broker.listRequestsInBulk(user, ontology_id);
 				
 				response.setContentType("text");
 				response.setStatus(HttpServletResponse.SC_OK);
@@ -75,14 +77,18 @@ public class NewBulkRequestServlet extends BrokerServlet {
 				raiseException(response, HttpServletResponse.SC_BAD_REQUEST, msg);
 				return;
 			}
-
-			bulkResponse = URLDecoder.decode(bulkResponse, "UTF-8");
-			BulkResponseTable table = new BulkResponseTable(bulkResponse);
+			
+			String ontologyID = getRequiredParam(request, "ontology_id", String.class);
 
 			UserCredentials creds = null;
 
 			Broker broker = getBroker();
 			try { 
+				Ontology ontology = broker.checkOntology(creds, ontologyID);
+				
+				bulkResponse = URLDecoder.decode(bulkResponse, "UTF-8");
+				BulkTable table = new BulkTable(ontology, bulkResponse);
+
 				broker.respondInBulk(creds, table);
 			} finally { 
 				broker.close();

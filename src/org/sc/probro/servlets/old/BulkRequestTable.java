@@ -1,10 +1,13 @@
-package org.sc.probro;
+package org.sc.probro.servlets.old;
 
 import java.util.*;
 import java.util.regex.*;
 import java.io.*;
 
 import org.json.*;
+import org.sc.probro.Metadata;
+import org.sc.probro.Request;
+import org.sc.probro.User;
 import org.sc.probro.servlets.RequestStateServlet;
 import org.sc.probro.utils.Numbering;
 
@@ -19,6 +22,7 @@ import org.sc.probro.utils.Numbering;
  * creates <tt>Request</tt>/<tt>Metadata objects</tt> from that submission (for comparison to, and 
  * update of, the database).  
  */
+@Deprecated
 public class BulkRequestTable {
 
 	public static String[] REQUEST_HEADERS = new String[] { 

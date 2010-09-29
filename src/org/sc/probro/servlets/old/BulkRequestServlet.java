@@ -15,8 +15,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.eclipse.jetty.util.log.Log;
 import org.sc.probro.BrokerProperties;
-import org.sc.probro.BulkRequestTable;
-import org.sc.probro.BulkResponseTable;
 import org.sc.probro.LocalBroker;
 import org.sc.probro.Metadata;
 import org.sc.probro.data.BrokerModel;

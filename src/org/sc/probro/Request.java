@@ -1,6 +1,10 @@
 package org.sc.probro;
 
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -84,5 +88,16 @@ public class Request extends BrokerData {
 		
 		stringer.endObject();
 		
+	}
+
+	public Map<String, Set<String>> createMetadataMap() {
+		Map<String,Set<String>> map = new TreeMap<String,Set<String>>();
+		for(Metadata m : metadata) { 
+			if(!map.containsKey(m.key)) { 
+				map.put(m.key, new TreeSet<String>());
+			}
+			map.get(m.key).add(m.value);
+		}
+		return map;
 	}
 }
