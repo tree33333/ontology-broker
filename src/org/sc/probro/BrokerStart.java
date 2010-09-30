@@ -76,6 +76,7 @@ public class BrokerStart {
 		js.addServlet("Ontologies", new NewOntologyListServlet(props), "/ontologies/*");
 		js.addServlet("User", new NewUserServlet(props), "/user/*");
 		js.addServlet("Users", new NewUserListServlet(props), "/users/*");
+		js.addServlet("Supervisor", new SupervisorServlet(), "/supervisor/*");
 
 		//js.addServlet("IndexCreator", new IndexCreatorServlet(props), "/indexer/*");
 		
