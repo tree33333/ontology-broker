@@ -11,6 +11,7 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.regex.*;
 
+import org.eclipse.jetty.util.log.Log;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -48,7 +49,9 @@ public class LocalBroker implements Broker {
 		
 		OntologyObject template = new OntologyObject();
 		template.ontology_id = parseOntologyID(ontologyID);
-		try {
+		Log.info(String.format("Loading requests from ontologyID=%d", template.ontology_id));
+		
+		try { 
 			OntologyObject obj = model.getModel().loadOnly(OntologyObject.class, template);
 			
 			return convertOntology(obj);
@@ -91,7 +94,7 @@ public class LocalBroker implements Broker {
 	
 	public Integer parseUserID(String url) { 
 		if(number.matcher(url).matches()) { return Integer.parseInt(url); }
-		Pattern p = Pattern.compile("^.*/user/([^\\/]+)/.*$");
+		Pattern p = Pattern.compile("^.*/user/([^\\/]+)/?.*$");
 		Matcher m = p.matcher(url);
 		if(!m.matches()) { throw new IllegalArgumentException(url); }
 		return Integer.parseInt(m.group(1));
@@ -99,7 +102,7 @@ public class LocalBroker implements Broker {
 	
 	public Integer parseOntologyID(String url) { 
 		if(number.matcher(url).matches()) { return Integer.parseInt(url); }
-		Pattern p = Pattern.compile("^.*/ontology/([^\\/]+)/.*$");
+		Pattern p = Pattern.compile("^.*/ontology/([^\\/]+)/?.*$");
 		Matcher m = p.matcher(url);
 		if(!m.matches()) { throw new IllegalArgumentException(url); }
 		return Integer.parseInt(m.group(1));
@@ -322,13 +325,23 @@ public class LocalBroker implements Broker {
 		}
 	}
 	
-	public Request[] listRequests(UserCredentials user, String ontologyID) throws BrokerException { 
+	public Request[] listRequests(UserCredentials user, Ontology ontology) throws BrokerException { 
 		try {
 			Collection<RequestObject> reqObjs = model.listLatestRequests();
+			Log.info(String.format("# Latest requests: %d", reqObjs.size()));
+			
 			ArrayList<Request> reqs = new ArrayList<Request>();
 			
-			for(RequestObject obj : reqObjs) { 
-				reqs.add(convertRequest(obj));
+			for(RequestObject obj : reqObjs) {
+				Request request = convertRequest(obj);
+				if(request.ontology.equals(ontology)) { 
+					reqs.add(request);
+				} else { 
+					Log.info(String.format("Request %s ontology %s != %s", 
+							request.id,
+							request.ontology.id,
+							ontology.id));
+				}
 			}
 			
 			return reqs.toArray(new Request[0]);
@@ -424,7 +437,9 @@ public class LocalBroker implements Broker {
 		Ontology ont = checkOntology(user, ontology);
 		BulkTable table = new BulkTable(ont);
 		
-		Request[] reqs = listRequests(user, ontology);
+		Request[] reqs = listRequests(user, ont);
+		Log.info(String.format("# Listed bulk requests: %d", reqs.length));
+		
 		for(Request req : reqs) { 
 			table.addRequest(req);
 		}

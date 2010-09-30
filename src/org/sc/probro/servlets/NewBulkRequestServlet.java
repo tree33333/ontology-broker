@@ -48,11 +48,15 @@ public class NewBulkRequestServlet extends BrokerServlet {
 			HttpServletResponse response) throws ServletException, IOException {
 
 		try { 
-			String ontology_id = getOptionalParam(request, "ontology_id", String.class);
-			UserCredentials user = new UserCredentials();
-			
 			Broker broker = getBroker();
 			try {
+				String ontology_id = getRequiredParam(request, "ontology_id", String.class);
+				//String ontology_id = request.getRequestURI();
+			
+				Log.info(String.format("Creating bulk request file for ontology \"%s\"", ontology_id));
+			
+				UserCredentials user = new UserCredentials();
+			
 				BulkTable table = broker.listRequestsInBulk(user, ontology_id);
 				
 				response.setContentType("text");

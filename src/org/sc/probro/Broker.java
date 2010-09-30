@@ -126,5 +126,5 @@ public interface Broker {
 	
 	public void respondInBulk(UserCredentials user, BulkTable response) throws BrokerException;
 	
-	public Request[] listRequests(UserCredentials user, String ontologyID) throws BrokerException;
+	public Request[] listRequests(UserCredentials user, Ontology ontology) throws BrokerException;
 }

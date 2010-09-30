@@ -33,6 +33,13 @@ public class Ontology extends BrokerData {
 		}
 	}
 	
+	public int hashCode() { return id.hashCode(); }
+
+	public boolean equals(Object obj) { 
+		return (obj instanceof Ontology) && 
+			id.equals(((Ontology)obj).id);
+	}
+	
 	public String toString() { return ontology_name; }
 	
 	public void stringJSON(JSONStringer obj) throws JSONException { 

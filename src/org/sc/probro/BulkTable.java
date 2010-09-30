@@ -6,6 +6,7 @@ import java.io.PrintWriter;
 import java.io.StringReader;
 import java.util.*;
 
+import org.eclipse.jetty.util.log.Log;
 import org.sc.probro.exceptions.BadRequestException;
 
 public class BulkTable {
@@ -18,10 +19,14 @@ public class BulkTable {
 	
 	public BulkTable(Ontology ont) {
 		ontology = ont;
+		columns = new ArrayList<String>();
+		columnToMetadata = new TreeMap<String,String>();
+		
 		columns.add("Tracking ID");
 		columns.add("name");
 		for(OntologyField field : ont.fields) { 
 			columns.add(field.name);
+			columnToMetadata.put(field.name, field.metadata_key);
 		}
 		
 		lines = new ArrayList<BulkLine>();
@@ -71,13 +76,21 @@ public class BulkTable {
 		array[1] = req.search_text;
 		
 		Map<String,Set<String>> metadata = req.createMetadataMap();
+		Log.info(String.format("Metadata Map: %s", metadata.toString()));
 
-		for(int i = 2; i < columns.size(); i++) { 
-			array[i] = combineStrings(metadata.get(columns.get(i)), "|");
+		for(int i = 2; i < columns.size(); i++) {
+			String metadataKey = columnToMetadata.get(columns.get(i));
+			if(metadataKey != null) { 
+				array[i] = combineStrings(metadata.get(metadataKey), "|");
+				Log.info(String.format("%s, %s=%s", columns.get(i), metadataKey, array[i]));
+			}
 		}
+		
+		addLine(new BulkLine(array));
 	}
 	
-	private static String combineStrings(Collection<String> strs, String sep) { 
+	private static String combineStrings(Collection<String> strs, String sep) {
+		if(strs == null) { return ""; }
 		StringBuilder sb = new StringBuilder();
 		if(strs != null) { 
 			for(String str : strs) { 

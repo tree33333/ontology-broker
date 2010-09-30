@@ -61,18 +61,21 @@ public class NewRequestListServlet extends BrokerServlet {
 			UserCredentials creds = new UserCredentials();
 			
 			String contentType = getContentType(request);
-			
-			Broker broker = getBroker();
-			
-			String ontologyID = getOptionalParam(request, "ontology_id", String.class);
-			
-			Request[] requests = broker.listRequests(creds, ontologyID);
-			
-			String content = formatRequests(requests, contentType);
 
-			response.setStatus(HttpServletResponse.SC_OK);
-			response.setContentType(contentType);
-			response.getWriter().println(content);
+			Broker broker = getBroker();
+			try { 
+				String ontologyID = getOptionalParam(request, "ontology_id", String.class);
+				Ontology ontology = broker.checkOntology(creds, ontologyID);
+				Request[] requests = broker.listRequests(creds, ontology);
+
+				String content = formatRequests(requests, contentType);
+
+				response.setStatus(HttpServletResponse.SC_OK);
+				response.setContentType(contentType);
+				response.getWriter().println(content);
+			} finally { 
+				broker.close();
+			}
 			
 		} catch(BrokerException e) { 
 			handleException(response, e);
