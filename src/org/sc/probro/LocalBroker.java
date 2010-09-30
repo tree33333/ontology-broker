@@ -102,7 +102,7 @@ public class LocalBroker implements Broker {
 	
 	public Integer parseOntologyID(String url) { 
 		if(number.matcher(url).matches()) { return Integer.parseInt(url); }
-		Pattern p = Pattern.compile("^.*/ontology/([^\\/]+)/?.*$");
+		Pattern p = Pattern.compile("^.*/ontology/?([^\\/]+)/?.*$");
 		Matcher m = p.matcher(url);
 		if(!m.matches()) { throw new IllegalArgumentException(url); }
 		return Integer.parseInt(m.group(1));
@@ -334,7 +334,7 @@ public class LocalBroker implements Broker {
 			
 			for(RequestObject obj : reqObjs) {
 				Request request = convertRequest(obj);
-				if(request.ontology.equals(ontology)) { 
+				if(ontology == null || request.ontology.equals(ontology)) { 
 					reqs.add(request);
 				} else { 
 					Log.info(String.format("Request %s ontology %s != %s", 

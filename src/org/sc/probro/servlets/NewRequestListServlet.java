@@ -65,7 +65,7 @@ public class NewRequestListServlet extends BrokerServlet {
 			Broker broker = getBroker();
 			try { 
 				String ontologyID = getOptionalParam(request, "ontology_id", String.class);
-				Ontology ontology = broker.checkOntology(creds, ontologyID);
+				Ontology ontology = ontologyID != null ? broker.checkOntology(creds, ontologyID) : null;
 				Request[] requests = broker.listRequests(creds, ontology);
 
 				String content = formatRequests(requests, contentType);
