@@ -18,9 +18,9 @@ import org.sc.probro.exceptions.*;
 
 import tdanford.json.schema.JSONType;
 
-public class NewRequestListServlet extends BrokerServlet {
+public class RequestListServlet extends BrokerServlet {
 
-	public NewRequestListServlet(BrokerProperties props) {
+	public RequestListServlet(BrokerProperties props) {
 		super(props);
 	}
 

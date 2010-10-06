@@ -13,9 +13,9 @@ import org.json.JSONStringer;
 import org.sc.probro.*;
 import org.sc.probro.exceptions.*;
 
-public class NewOntologyListServlet extends BrokerServlet {
+public class UserListServlet extends BrokerServlet {
 
-	public NewOntologyListServlet(BrokerProperties props) {
+	public UserListServlet(BrokerProperties props) {
 		super(props);
 	}
 	
@@ -26,33 +26,34 @@ public class NewOntologyListServlet extends BrokerServlet {
 			String content = null;
 			
 			Broker broker = getBroker();
-			Ontology[] onts = broker.listOntologies(creds);
+			
+			String ontologyID = null;
+			User[] users = broker.listUsers(creds, ontologyID);
 
 			if(contentType.equals(CONTENT_TYPE_JSON)) { 
-				JSONStringer stringer = new JSONStringer();
-				
+				JSONStringer stringer = new JSONStringer();			
 				try { 
 					stringer.object();
-
 					stringer.key("vals");
-					BrokerData.stringJSONArray(stringer, onts);
-
+					
+					BrokerData.stringJSONArray(stringer, users);
+					
 					stringer.endObject();
+					
 				} catch(JSONException e) { 
 					throw new BrokerException(e);
 				}
-				
 				content = stringer.toString(); 
 
 			} else if (contentType.equals(CONTENT_TYPE_HTML)) { 
 				StringWriter stringer = new StringWriter();
 				PrintWriter writer = new PrintWriter(stringer);
 
-				Ontology t = new Ontology();
+				User t = new User();
 				writer.println("<table>");
 				writer.println(t.writeHTMLRowHeader());
-				for(Ontology ont : onts) { 
-					writer.println(ont.writeHTMLObject(true));
+				for(User user : users) { 
+					writer.println(user.writeHTMLObject(true));
 				}
 				writer.println("</table>");
 				

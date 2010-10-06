@@ -17,9 +17,9 @@ import org.sc.probro.*;
 import org.sc.probro.data.*;
 import org.sc.probro.exceptions.*;
 
-public class NewOntologyServlet extends BrokerServlet {
+public class OntologyServlet extends BrokerServlet {
 
-	public NewOntologyServlet(BrokerProperties props) {
+	public OntologyServlet(BrokerProperties props) {
 		super(props);
 	}
 	

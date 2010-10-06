@@ -18,9 +18,9 @@ import org.sc.probro.*;
 import org.sc.probro.data.*;
 import org.sc.probro.exceptions.*;
 
-public class NewRequestServlet extends BrokerServlet {
+public class RequestServlet extends BrokerServlet {
 
-	public NewRequestServlet(BrokerProperties props) {
+	public RequestServlet(BrokerProperties props) {
 		super(props);
 	}
 	

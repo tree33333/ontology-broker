@@ -26,11 +26,11 @@ import org.sc.probro.exceptions.BadRequestException;
 import org.sc.probro.exceptions.BrokerException;
 import org.sc.probro.lucene.ProteinSearcher;
 
-public class NewTextQueryServlet extends BrokerServlet {
+public class TextQueryServlet extends BrokerServlet {
 	
 	private String luceneIndexPath;
 	
-	public NewTextQueryServlet(BrokerProperties props) { 
+	public TextQueryServlet(BrokerProperties props) { 
 		super(props);
 		luceneIndexPath = props.getLuceneIndex();
 	}

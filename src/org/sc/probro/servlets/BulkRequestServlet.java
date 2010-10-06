@@ -36,9 +36,9 @@ import org.sc.probro.exceptions.BrokerException;
  * @author tdanford
  *
  */
-public class NewBulkRequestServlet extends BrokerServlet {
+public class BulkRequestServlet extends BrokerServlet {
 	
-	public NewBulkRequestServlet(BrokerProperties ps) { 
+	public BulkRequestServlet(BrokerProperties ps) { 
 		super(ps);
 	}
 
