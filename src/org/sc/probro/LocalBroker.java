@@ -9,14 +9,21 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.regex.*;
 
 import org.eclipse.jetty.util.log.Log;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.sc.obo.OBOOntology;
+import org.sc.obo.OBOStanza;
+import org.sc.obo.OBOValue;
 import org.sc.probro.data.*;
 import org.sc.probro.exceptions.*;
+import org.sc.probro.lucene.IndexCreator;
 import org.sc.probro.lucene.ProteinSearcher;
 import org.sc.probro.servlets.RequestStateServlet;
 
@@ -42,6 +49,88 @@ public class LocalBroker implements Broker {
 	
 	public String formatDate(Date d) { 
 		return dateFormat.format(d);
+	}
+	
+	public Ontology createOntology(UserCredentials creds, String ontologyName, OBOOntology ontology) throws BrokerException { 
+		
+		UserObject maintainer = new UserObject();
+		
+		maintainer.user_id = 1;
+		
+		try {
+			OntologyObject ontologyObject = model.createNewOntology(ontologyName, maintainer);
+			
+			addOntologyToIndex(ontology);
+			
+			String ontologyID = ontologyURL(ontologyObject.ontology_id);
+			
+			assert ontologyID != null;
+			
+			return checkOntology(creds, ontologyID);
+			
+		} catch (DBModelException e) {
+			throw new BrokerException(e);
+		}
+	}
+	
+	private void addOntologyToIndex(OBOOntology ontology) throws BrokerException {
+		
+		Collection<OBOStanza> stanzas = ontology != null ? ontology.getStanzas() : 
+			new LinkedList<OBOStanza>();
+
+		File dir = new File(luceneIndexPath);
+		String type = "ontology";
+
+		try { 
+			IndexCreator creator = new IndexCreator(dir);
+			try { 
+				for(OBOStanza stanza : stanzas) { 
+					String id = stanza.id();
+					
+					Set<String> accs = new TreeSet<String>();
+					Set<String> descs = new TreeSet<String>();
+					
+					List<OBOValue> values = stanza.values("synonym");
+					Pattern p = Pattern.compile("\"(.*)\" (EXACT)|(RELATED) \\[\\]");
+					
+					for(OBOValue value : values) { 
+						Matcher m = p.matcher(value.getValue());
+						if(m.matches()) { 
+							accs.add(m.group(1));
+						} else { 
+							accs.add(value.getValue());
+						}
+					}
+					
+					descs.add(stanza.values("name").get(0).getValue());
+					descs.add(stanza.values("def").get(0).getValue());
+					
+					for(OBOValue value : stanza.values("xref")) { 
+						accs.add(value.getValue());
+					}
+
+					if(creator != null) { 
+						creator.addTerm(id, type, accs, descs);
+					} else { 
+						//Log.info(String.format("INDEX: %s (%s) %s %s", id, type, String.valueOf(accs), String.valueOf(descs)));
+					}
+				}
+
+			} finally {
+				if(creator != null) { 
+					try { 
+						creator.checkpoint();
+						creator.close();
+					} catch(IOException e) { 
+						throw new BrokerException(e); 
+					}
+				}
+			}
+
+		} catch(IOException e) { 
+			throw new BrokerException(e);
+		}
+
 	}
 	
 	public Ontology checkOntology(UserCredentials creds, String ontologyID) throws BrokerException { 

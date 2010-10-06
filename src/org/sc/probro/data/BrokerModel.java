@@ -219,6 +219,16 @@ public class BrokerModel {
 		model.rollbackTransaction();
 	}
 
+	public synchronized OntologyObject createNewOntology(String name, UserObject maintainer) throws DBModelException { 
+		OntologyObject obj = new OntologyObject();
+		obj.maintainer_id = maintainer.user_id;
+		obj.ontology_name = name;
+		
+		model.create(OntologyObject.class, obj);
+		
+		return obj;
+	}
+
 	public synchronized ProvisionalTermObject createNewRequest(RequestObject req, Collection<MetadataObject> metadatas) throws DBModelException { 
 
 		//req.provisional_term = url(String.format("/request/%s", generateRandomTerm()));

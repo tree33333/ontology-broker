@@ -4,6 +4,7 @@ import java.util.Collection;
 
 import org.json.JSONObject;
 import org.junit.experimental.theories.Theories;
+import org.sc.obo.OBOOntology;
 import org.sc.probro.exceptions.BadRequestException;
 import org.sc.probro.exceptions.BrokerException;
 import org.sc.probro.exceptions.GoneException;
@@ -35,6 +36,8 @@ public interface Broker {
 	 * @throws GoneException If the <tt>ontologyID</tt> argument corresponds to no known Ontology.
 	 */
 	public Ontology checkOntology(UserCredentials creds, String ontologyID) throws BrokerException, GoneException;
+	
+	public Ontology createOntology(UserCredentials creds, String ontologyName, OBOOntology ontology) throws BrokerException;
 	
 	/**
 	 * <font style="color: red;">Corresponds to none of the functional requirements.</font>
