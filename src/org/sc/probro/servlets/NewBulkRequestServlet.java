@@ -29,8 +29,6 @@ import org.sc.probro.data.MetadataObject;
 import org.sc.probro.data.ProvisionalTermObject;
 import org.sc.probro.data.RequestObject;
 import org.sc.probro.exceptions.BrokerException;
-import org.sc.probro.servlets.old.BulkRequestTable;
-import org.sc.probro.servlets.old.BulkResponseTable;
 
 /**
  * Cleared for BrokerModel usage.
