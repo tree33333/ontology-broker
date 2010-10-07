@@ -19,6 +19,10 @@ public class OntologyListServlet extends BrokerServlet {
 		super(props);
 	}
 	
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		request.getRequestDispatcher("/indexer").forward(request, response);
+	}
+	
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException { 
 		try { 
 			UserCredentials creds = new UserCredentials();

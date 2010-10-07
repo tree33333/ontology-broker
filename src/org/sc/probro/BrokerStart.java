@@ -77,7 +77,7 @@ public class BrokerStart {
 		js.addServlet("Users", new UserListServlet(props), "/users/*");
 		js.addServlet("Supervisor", new SupervisorServlet(), "/supervisor/*");
 
-		//js.addServlet("IndexCreator", new IndexCreatorServlet(props), "/indexer/*");
+		js.addServlet("IndexCreator", new IndexCreatorServlet(props), "/indexer/*");
 		
 		Runtime.getRuntime().addShutdownHook(new Thread(new ShutdownRunnable(js)));
 		js.start();
