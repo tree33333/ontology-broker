@@ -38,6 +38,7 @@ import org.sc.probro.exceptions.BadRequestException;
 import org.sc.probro.exceptions.BrokerException;
 import org.sc.probro.lucene.IndexCreator;
 import org.sc.probro.sparql.BindingTable;
+import org.sc.probro.sparql.OBOBuilder;
 import org.sc.probro.sparql.OBOSparql;
 import org.sc.probro.sparql.Prefixes;
 
@@ -65,28 +66,20 @@ public class IndexCreatorServlet extends BrokerServlet {
 
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		try {
+			OBOBuilder builder = new OBOBuilder(oboSparql);
 			String oboName = getRequiredParam(request, "obo", String.class);
-			String oboURI = OBOSparql.createGraphURI(oboName);
 			
-			if(oboURI.indexOf(">") != -1) { 
-				throw new BrokerException(HttpServletResponse.SC_BAD_REQUEST, 
-						String.format("Illegal OBO Name: %s", oboName));
+			try { 
+				String oboText = builder.loadOBO(oboName);
+
+				response.setStatus(HttpServletResponse.SC_OK);
+				response.setContentType("text");
+				PrintWriter writer = response.getWriter();
+				writer.println(oboText);
+
+			} catch(IOException e) { 
+				throw new BrokerException(e);
 			}
-			
-			Prefixes prefs = Prefixes.DEFAULT;
-			
-			String query = String.format(
-					"%s\nselect count(?s) where { graph <%s> { ?s a owl:Class . } }", 
-					prefs.getSparqlPrefixStatement("owl"), oboURI);
-			
-			BindingTable<RDFNode> tbl = oboSparql.query(query);
-			Literal countLiteral = tbl.get(0).as(Literal.class);
-			int count = countLiteral.getInt();
-			
-			response.setStatus(HttpServletResponse.SC_OK);
-			response.setContentType("text");
-			PrintWriter writer = response.getWriter();
-			writer.println(String.format("%s\n# Classes: %d", oboURI, count));
 			
 		} catch (BrokerException e) {
 			handleException(response, e);
@@ -106,7 +99,7 @@ public class IndexCreatorServlet extends BrokerServlet {
 
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException { 
 		try { 
-			OBOParser parser = new OBOParser();
+			OBOParser parser = null;
 			Map<String,String[]> params = decodedParams(request);
 
 			UserCredentials creds = new UserCredentials();
@@ -156,22 +149,18 @@ public class IndexCreatorServlet extends BrokerServlet {
 						if(formName.equals("ontology_file")) {
 							
 							Log.info(String.format("fileName=%s, contentType=%s, size=%d", fileName, contentType, sizeInBytes));
-
-							InputStream uploadedStream = item.getInputStream();
-							BufferedReader reader = new BufferedReader(new InputStreamReader(uploadedStream));
-
-							/*
-							String line; 
-							System.out.println("Ontology: ");
-							while((line = reader.readLine()) != null) { 
-								System.out.println(line);
-							}
-							System.out.println("Done.");
-							*/
 							
-							parser.parse(reader);
+							if(fileName.length() > 0) { 
 
-							reader.close();
+								InputStream uploadedStream = item.getInputStream();
+								BufferedReader reader = new BufferedReader(new InputStreamReader(uploadedStream));
+
+								parser = new OBOParser();
+								parser.parse(reader);
+
+								reader.close();
+							}
+							
 						} else { 
 							Log.warn(String.format("unknown file: %s", formName));
 						}
@@ -188,7 +177,24 @@ public class IndexCreatorServlet extends BrokerServlet {
 				throw new BadRequestException("No ontology_name field given.");
 			}
 			
-			OBOOntology ontology = parser.getOntology();
+			
+			OBOOntology ontology = null; 
+				
+			try {
+				if(parser != null) { 
+					Log.info(String.format("Retrieving OBO ontology from file."));
+					// file was uploaded
+					ontology = parser.getOntology();
+				} else { 
+					// try to get it from teh sparql endpoint
+					Log.info(String.format("No OBO file uploaded, reading from Sparql endpoint instead."));
+					
+					OBOBuilder builder = new OBOBuilder(oboSparql);
+					ontology = builder.buildOntology(ontologyName);
+				}
+			} catch(IOException e) { 
+				throw new BrokerException(e);
+			}
 			
 			Broker broker = getBroker();
 			try {
