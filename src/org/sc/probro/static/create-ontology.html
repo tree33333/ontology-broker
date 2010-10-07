@@ -9,18 +9,6 @@
 
 <script type="text/javascript">
 $(document).ready(function() { 
-	$('#submitbutton').click(function(evt) { 
-		var ontology_name = $('input[name="ontology_name"]').attr('value');
-		var post_data = { 'name' : ontology_name };
-		if(ontology_name.length > 0) { 
-			$.post('/ontologies', JSON.stringify(post_data), function(response) { 
-				Broker.debug('response: ' + response);
-			}, 'text');
-		} else { 
-			Broker.debug('Empty name.');
-		}
-		return false;
-	});
 });
 </script>
 <style>
