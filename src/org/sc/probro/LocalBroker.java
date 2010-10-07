@@ -58,9 +58,21 @@ public class LocalBroker implements Broker {
 		maintainer.user_id = 1;
 		
 		try {
-			OntologyObject ontologyObject = model.createNewOntology(ontologyName, maintainer);
+			OntologyObject ontologyObject = null;
 			
-			addOntologyToIndex(ontology);
+			try { 
+				model.startTransaction();
+
+				ontologyObject = model.createNewOntology(ontologyName, maintainer);
+
+				addOntologyToIndex(ontology);
+
+				model.commitTransaction();
+			
+			} catch(DBModelException e) { 
+				model.rollbackTransaction();
+				throw e;
+			}
 			
 			String ontologyID = ontologyURL(ontologyObject.ontology_id);
 			
@@ -90,23 +102,35 @@ public class LocalBroker implements Broker {
 					Set<String> accs = new TreeSet<String>();
 					Set<String> descs = new TreeSet<String>();
 					
-					List<OBOValue> values = stanza.values("synonym");
 					Pattern p = Pattern.compile("\"(.*)\" (EXACT)|(RELATED) \\[\\]");
 					
-					for(OBOValue value : values) { 
-						Matcher m = p.matcher(value.getValue());
-						if(m.matches()) { 
-							accs.add(m.group(1));
-						} else { 
-							accs.add(value.getValue());
+					List<OBOValue> values = stanza.values("synonym");					
+					if(values != null) { 
+						for(OBOValue value : values) { 
+							Matcher m = p.matcher(value.getValue());
+							if(m.matches()) { 
+								accs.add(m.group(1));
+							} else { 
+								accs.add(value.getValue());
+							}
 						}
 					}
 					
-					descs.add(stanza.values("name").get(0).getValue());
-					descs.add(stanza.values("def").get(0).getValue());
+					values = stanza.values("name");
+					if(values != null) { 
+						descs.add(stanza.values("name").get(0).getValue());
+					}
 					
-					for(OBOValue value : stanza.values("xref")) { 
-						accs.add(value.getValue());
+					values = stanza.values("def");
+					if(values != null) { 
+						descs.add(stanza.values("def").get(0).getValue());
+					}
+
+					values = stanza.values("xref");
+					if(values != null) { 
+						for(OBOValue value : values) { 
+							accs.add(value.getValue());
+						}
 					}
 
 					if(creator != null) { 
