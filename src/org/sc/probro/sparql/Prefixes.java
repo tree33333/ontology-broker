@@ -154,4 +154,8 @@ public class Prefixes {
 			throw new IllegalArgumentException("key");
 		}
 	}
+
+	public Set<String> getPrefixes() {
+		return prefixMap.keySet();
+	}
 }
