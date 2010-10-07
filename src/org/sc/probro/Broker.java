@@ -130,4 +130,6 @@ public interface Broker {
 	public void respondInBulk(UserCredentials user, BulkTable response) throws BrokerException;
 	
 	public Request[] listRequests(UserCredentials user, Ontology ontology) throws BrokerException;
+
+	public void addOntologyField(UserCredentials user, Ontology ont, OntologyField newField) throws BrokerException;
 }

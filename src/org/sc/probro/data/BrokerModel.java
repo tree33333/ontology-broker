@@ -276,4 +276,9 @@ public class BrokerModel {
 		term.request_id = req.request_id;
 		model.update(term);
 	}
+
+	public void createNewOntologyField(OntologyFieldObject obj) throws DBModelException {
+		
+		model.create(OntologyFieldObject.class, obj);
+	}
 }

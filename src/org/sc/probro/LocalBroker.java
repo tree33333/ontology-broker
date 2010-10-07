@@ -589,4 +589,23 @@ public class LocalBroker implements Broker {
 		}
 	}
 
+	/**
+	 * @throws BrokerException 
+	 * @inheritDocs
+	 */
+	public void addOntologyField(UserCredentials user, Ontology ont, OntologyField newField) throws BrokerException {
+		int ontologyID = parseOntologyID(ont.id);
+		
+		OntologyFieldObject obj = new OntologyFieldObject();
+		obj.field_description = newField.description;
+		obj.field_name = newField.name;
+		obj.field_metadata_key = newField.metadata_key;
+		obj.ontology_id = ontologyID;
+		
+		try {
+			model.createNewOntologyField(obj);
+		} catch (DBModelException e) {
+			throw new BrokerException(e);
+		}
+	}
 }
