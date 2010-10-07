@@ -12,6 +12,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.eclipse.jetty.util.log.Log;
 import org.json.JSONException;
+import org.json.JSONObject;
 import org.json.JSONStringer;
 import org.sc.probro.*;
 import org.sc.probro.data.*;
@@ -24,6 +25,40 @@ public class OntologyServlet extends BrokerServlet {
 	}
 	
 	private static Pattern bulkRequestURIPattern = Pattern.compile("^(.*)/ontology/(.*)/bulk-requests(.*)$");
+	private static Pattern metadataURIPattern = Pattern.compile("^(.*/ontology/.*)/metadata(.*)$");
+	
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException { 
+	
+		try { 
+			String ontologyID = request.getRequestURI();
+			Matcher metadataMatcher = metadataURIPattern.matcher(ontologyID);
+
+			if(metadataMatcher.matches()) { 
+				ontologyID = metadataMatcher.group(1);
+				
+				request.setAttribute("ontology_id", ontologyID);
+
+				String fieldName = getRequiredParam(request, "field_name", String.class);
+				String fieldDescription = getRequiredParam(request, "field_description", String.class);
+				String fieldMetadataKey = getRequiredParam(request, "metadata_key", String.class);
+				
+				request.setAttribute("field_name", fieldName);
+				request.setAttribute("field_description", fieldDescription);
+				request.setAttribute("metadata_key", fieldMetadataKey);
+				
+				request.getRequestDispatcher("/ontologyfields").forward(request, response);
+				
+			} else { 
+				throw new BadRequestException("'metadata' not present in ontology URI");
+			}
+		
+		} catch(BrokerException e) { 
+			this.handleException(response, e);
+			return;
+		}
+		
+	}
+
 	
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException { 
 		try { 
