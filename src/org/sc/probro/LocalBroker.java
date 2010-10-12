@@ -409,8 +409,14 @@ public class LocalBroker implements Broker {
 			}
 			
 			model.startTransaction();
-			model.updateRequest(termObj, newObj, loadMetadatas(newObj.request_id));
-			model.commitTransaction();
+			try { 
+				model.updateRequest(termObj, newObj, loadMetadatas(newObj.request_id));
+				model.commitTransaction();
+			
+			} catch(DBModelException e) { 
+				model.rollbackTransaction();
+				throw e;
+			}
 
 		} catch (DBModelException e) {
 			throw new InternalServerErrorException(e);
@@ -561,10 +567,40 @@ public class LocalBroker implements Broker {
 	}
 	
 	public void respondInBulk(UserCredentials user, BulkTable response)
-			throws BrokerException {
+	throws BrokerException {
 
-		// TODO: fix me.
-		throw new UnsupportedOperationException("respond");
+		try { 
+			model.startTransaction();
+			try { 
+			
+				for(int i = 0; i < response.lines.size(); i++) { 
+					
+					Request request = response.getRequest(i);
+					RequestObject reqObj = new RequestObject();
+					
+					unconvertRequest(reqObj, request);
+					
+					Collection<MetadataObject> metaObjs = unconvertMetadata(request.metadata);
+					
+					ProvisionalTermObject termObj = model.getProvisionalTerm(request.id);
+					
+					model.updateRequest(termObj, reqObj, metaObjs);
+				}
+				
+
+			} catch(DBModelException e) { 
+				model.rollbackTransaction();
+				throw e;
+			} catch (DBObjectMissingException e) {
+				model.rollbackTransaction();
+				throw e;
+			}
+
+		} catch (DBModelException e) {
+			throw new BrokerException(e);
+		} catch(DBObjectMissingException e) { 
+			throw new BrokerException(e);
+		}
 	}
 
 	/**

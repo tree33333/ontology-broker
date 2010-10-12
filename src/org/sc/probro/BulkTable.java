@@ -123,5 +123,10 @@ public class BulkTable {
 			this(str.split("\t"));
 		}
 	}
+
+	public Request getRequest(int i) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }
 
