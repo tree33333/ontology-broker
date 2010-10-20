@@ -64,6 +64,7 @@ public class IndexCreator {
 	
 	public void checkpoint() throws IOException { 
 		writer.commit();
+		Log.info("IndexCreator checkpoint");
 		//writer.optimize();
 	}
 
