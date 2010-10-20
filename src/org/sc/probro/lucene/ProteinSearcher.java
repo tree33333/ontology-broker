@@ -49,8 +49,7 @@ public class ProteinSearcher {
 		Log.info("Creating IndexReader in ProteinSearcher...");
 		reader = IndexReader.open(dir, true);
 		search = new IndexSearcher(reader);
-		System.out.println(String.format("Opened: %s \n\t(# docs: %d)", dir.toString(), reader.numDocs()));
-		
+		Log.info(String.format("Opened: %s \n\t(# docs: %d)", dir.toString(), reader.numDocs()));
 	}
 	
 	public JSONArray evaluate(String query) throws IOException, JSONException { 
@@ -74,7 +73,7 @@ public class ProteinSearcher {
 	public JSONObject renderDocumentAsJSON(Document doc) throws JSONException { 
 		JSONObject obj = new JSONObject();
 		
-		System.out.println("Document");
+		//System.out.println("Document");
 		List fields = doc.getFields();
 		for(Object f : fields) { 
 			Field ff = (Field)f;
