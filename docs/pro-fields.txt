@@ -1,0 +1,7 @@
+
+INSERT INTO ONTOLOGYFIELDS (ontology_id, field_name, field_metadata_key) values (1, 'DB source', 'db'); 
+INSERT INTO ONTOLOGYFIELDS (ontology_id, field_name, field_metadata_key) values (1, 'UniprotKB Acc', 'uniprot'); 
+INSERT INTO ONTOLOGYFIELDS (ontology_id, field_name, field_metadata_key) values (1, 'protein coordinates (beginning-end)', 'coordinates'); 
+INSERT INTO ONTOLOGYFIELDS (ontology_id, field_name, field_metadata_key) values (1, 'residue #, Modification', 'modification'); 
+INSERT INTO ONTOLOGYFIELDS (ontology_id, field_name, field_metadata_key) values (1, 'taxon ID', 'taxon'); 
+INSERT INTO ONTOLOGYFIELDS (ontology_id, field_name, field_metadata_key) values (1, 'Organism', 'organism'); 
