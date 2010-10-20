@@ -65,7 +65,7 @@ public class LocalBroker implements Broker {
 
 				ontologyObject = model.createNewOntology(ontologyName, maintainer);
 
-				addOntologyToIndex(ontology);
+				addOntologyToIndex(ontologyName, ontology);
 
 				model.commitTransaction();
 			
@@ -85,13 +85,12 @@ public class LocalBroker implements Broker {
 		}
 	}
 	
-	private void addOntologyToIndex(OBOOntology ontology) throws BrokerException {
+	private void addOntologyToIndex(String type, OBOOntology ontology) throws BrokerException {
 		
 		Collection<OBOStanza> stanzas = ontology != null ? ontology.getStanzas() : 
 			new LinkedList<OBOStanza>();
 
 		File dir = new File(luceneIndexPath);
-		String type = "ontology";
 
 		try { 
 			IndexCreator creator = new IndexCreator(dir);
@@ -491,10 +490,20 @@ public class LocalBroker implements Broker {
 	}
 
 	public SearchResult[] query(UserCredentials user, String query,
-			String... ontologyId) throws BrokerException, GoneException {
+			String... ontologyIds) throws BrokerException, GoneException {
 
 		try { 
 			ProteinSearcher searcher = new ProteinSearcher(new File(luceneIndexPath));
+			
+			Set<String> types = null;
+			if(ontologyIds != null && ontologyIds.length > 0) { 
+				types = new TreeSet<String>();
+				for(String id : ontologyIds) { 
+					Ontology ont = checkOntology(user, id);
+					types.add(ont.ontology_name);
+				}
+			}
+			
 			try { 
 
 				ArrayList<SearchResult> results = new ArrayList<SearchResult>();
@@ -503,7 +512,10 @@ public class LocalBroker implements Broker {
 				for(int i = 0; i < hits.length(); i++) { 
 					JSONObject obj = hits.getJSONObject(i);
 					SearchResult result = new SearchResult(obj);
-					results.add(result);
+				
+					if(types==null || types.contains(result.response_type)) { 
+						results.add(result);
+					}
 				}
 				
 				return results.toArray(new SearchResult[0]);
