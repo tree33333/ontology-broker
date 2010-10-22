@@ -1,0 +1,18 @@
+
+1. Compile the source code, and create the complete jar file.
+
+  ant -file broker.xml jar
+
+2. Unpack the index and database files. 
+
+  cd data/ 
+  gunzip PRO-index.tar.gz request.db.tar.gz
+  tar xvf PRO-index.tar
+  tar xvf request.db.tar
+  cd ../
+  
+3. Run, with sufficient memory. 
+
+  java -Xmx200m -jar dist/lib/ontology-broker.jar
+  
+ 
