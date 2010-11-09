@@ -1,0 +1,9 @@
+Ontology Term Request Broker
+Copyright 2010 Massachusetts General Hospital
+
+This product includes software developed by
+
+The Apache Software Foundation (http://www.apache.org/)
+Hewlett-Packard Development Company, LP
+The Eclipse Foundation
+Hamcrest
